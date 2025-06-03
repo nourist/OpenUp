@@ -1,1 +1,61 @@
 @import 'tailwindcss';
+
+@theme {
+	--color-base-100: oklch(100% 0 0);
+	--color-base-200: oklch(97.466% 0.011 259.822);
+	--color-base-300: oklch(93.268% 0.016 262.751);
+	--color-base-content: oklch(31.886% 0.073 255.824);
+
+	--color-primary: #ff5e3a;
+	--color-secondary: #8e2de2;
+	--color-accent: #00d4ff;
+
+	--color-neutral: oklch(19.616% 0.063 257.651);
+	--color-neutral-content: oklch(83.923% 0.012 257.651);
+
+	--color-info: oklch(74% 0.16 232.661);
+	--color-info-content: oklch(29% 0.066 243.157);
+
+	--color-success: oklch(76% 0.177 163.223);
+	--color-success-content: oklch(37% 0.077 168.94);
+
+	--color-warning: oklch(82% 0.189 84.429);
+	--color-warning-content: oklch(41% 0.112 45.904);
+
+	--color-error: oklch(71% 0.194 13.428);
+	--color-error-content: oklch(27% 0.105 12.094);
+}
+
+@layer theme {
+	.dark {
+		--color-base-100: oklch(22% 0.019 237.69);
+		--color-base-200: oklch(20% 0.019 237.69);
+		--color-base-300: oklch(18% 0.019 237.69);
+		--color-base-content: oklch(77.383% 0.043 245.096);
+
+		--color-neutral: oklch(26% 0.019 237.69);
+		--color-neutral-content: oklch(70% 0.019 237.69);
+
+		--color-info: oklch(68.455% 0.148 237.251);
+		--color-info-content: oklch(0% 0 0);
+
+		--color-success: oklch(78.452% 0.132 181.911);
+		--color-success-content: oklch(15.69% 0.026 181.911);
+
+		--color-warning: oklch(83.242% 0.139 82.95);
+		--color-warning-content: oklch(16.648% 0.027 82.95);
+
+		--color-error: oklch(71.785% 0.17 13.118);
+		--color-error-content: oklch(14.357% 0.034 13.118);
+	}
+}
+
+html {
+	font-family: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	color: var(--color-base-content);
+}
+
+a,
+button {
+	@apply cursor-pointer;
+}
