@@ -13,13 +13,27 @@ const Home = () => {
 
 	return (
 		<div className="bg-base-100 px-8 md:px-28">
-			<header className="fixed top-4 right-8 left-8 flex h-16 items-center gap-1 rounded-xl bg-white/30 p-3 text-sm backdrop-blur-xl md:right-28 md:left-28">
+			<header className="fixed top-4 right-8 left-8 flex h-16 items-center gap-1 rounded-xl bg-white/3 p-3 text-sm backdrop-blur-xl md:right-28 md:left-28">
 				<img className="size-10" src={logo} alt="" />
 				<h1 className="text-primary text-2xl font-bold">OpenUp</h1>
 				<div className="text-base-content/80 mx-auto hidden space-x-12 font-medium md:block">
-					<button className="hover:text-base-content capitalize">{t('home')}</button>
-					<button className="hover:text-base-content capitalize">{t('features')}</button>
-					<button className="hover:text-base-content capitalize">{t('about')}</button>
+					<button onClick={() => window.scrollTo({ left: 0, top: 0, behavior: 'smooth' })} className="hover:text-base-content capitalize">
+						{t('home')}
+					</button>
+					<button
+						onClick={() =>
+							window.scrollTo({ top: (document.getElementById('feature-point')?.getBoundingClientRect().top || 0) + window.pageYOffset - 100, behavior: 'smooth' })
+						}
+						className="hover:text-base-content capitalize"
+					>
+						{t('features')}
+					</button>
+					<button
+						onClick={() => document.getElementById('footer-point')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+						className="hover:text-base-content capitalize"
+					>
+						{t('about')}
+					</button>
 				</div>
 				<Link className="text-primary mr-5 ml-auto capitalize hover:underline md:ml-0" to="/signin">
 					{t('sign-in')}
@@ -47,7 +61,9 @@ const Home = () => {
 				</div>
 			</div>
 			<div className="mt-12 mb-20 flex flex-col items-center">
-				<div className="bg-primary/10 text-primary mx-auto inline rounded-full px-5 py-2 text-sm font-bold capitalize">{t('features')}</div>
+				<div className="bg-primary/10 text-primary mx-auto inline rounded-full px-5 py-2 text-sm font-bold capitalize" id="feature-point">
+					{t('features')}
+				</div>
 				<h1 className="mt-3 text-center text-3xl font-light">
 					{t('reason-title').capitalize()} <span className="text-primary font-bold">OpenUp</span>
 				</h1>
@@ -119,7 +135,7 @@ const Home = () => {
 					</div>
 				</div>
 			</div>
-			<footer className="border-base-content/20 flex h-20 flex-wrap items-center gap-1 border-t">
+			<footer className="border-base-content/20 flex h-20 flex-wrap items-center gap-1 border-t" id="footer-point">
 				© 2025, {t('made-with')}
 				<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
 					<path
@@ -136,11 +152,16 @@ const Home = () => {
 				>
 					Nourist
 				</a>
-				<button className="hover:text-base-content text-base-content/80 ml-auto capitalize">{t('home')}</button>
-				<a href="https://github.com/nourist/OpenUp/blob/main/LICENSE" className="hover:text-base-content text-base-content/80 ml-8 capitalize">
+				<button
+					className="hover:text-base-content text-base-content/80 mr-8 ml-auto hidden capitalize sm:block"
+					onClick={() => window.scrollTo({ left: 0, top: 0, behavior: 'smooth' })}
+				>
+					{t('home')}
+				</button>
+				<a href="https://github.com/nourist/OpenUp/blob/main/LICENSE" className="hover:text-base-content text-base-content/80 mr-8 capitalize">
 					{t('license')}
 				</a>
-				<a href="https://github.com/nourist/OpenUp" className="hover:text-base-content text-base-content/80 ml-8 capitalize">
+				<a href="https://github.com/nourist/OpenUp" className="hover:text-base-content text-base-content/80 capitalize">
 					{t('github')}
 				</a>
 			</footer>
