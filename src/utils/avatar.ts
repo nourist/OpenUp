@@ -1,4 +1,4 @@
-export const getShortName = (name:string) => {
+export const getShortName = (name: string) => {
 	const arr = name.toUpperCase().split(' ');
 	if (arr.length == 0) {
 		return 'UR';

@@ -1,4 +1,4 @@
-export const hslToRgb = (h:number, s:number, l:number) => {
+export const hslToRgb = (h: number, s: number, l: number) => {
 	s /= 100;
 	l /= 100;
 	let c = (1 - Math.abs(2 * l - 1)) * s;
@@ -39,16 +39,16 @@ export const hslToRgb = (h:number, s:number, l:number) => {
 	return [r, g, b];
 };
 
-export const rgbToHex = (r:number, g:number, b:number) => {
+export const rgbToHex = (r: number, g: number, b: number) => {
 	return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
 };
 
-export const hslToHex = (h:number, s:number, l:number) => {
+export const hslToHex = (h: number, s: number, l: number) => {
 	const [r, g, b] = hslToRgb(h, s, l);
 	return rgbToHex(r, g, b);
 };
 
-export const stringToBrightColor = (str:string) => {
+export const stringToBrightColor = (str: string) => {
 	let hash = 0;
 
 	for (let i = 0; i < str.length; i++) {

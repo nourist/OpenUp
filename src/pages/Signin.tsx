@@ -21,7 +21,7 @@ const Signin = () => {
 	return (
 		<div className="bg-base-200 flex h-[100vh] items-center justify-center p-8">
 			{user ? (
-				<AlreadySignedAlert/>
+				<AlreadySignedAlert />
 			) : (
 				<div className="bg-base-100 flex aspect-video h-[calc(100%-140px)] max-w-[calc(100%-64px)] rounded-4xl shadow-lg">
 					<AbstractGradientShape className="hidden w-1/2 rounded-tl-4xl md:block" />

@@ -8,7 +8,7 @@ interface Props {
 	className?: string;
 }
 
-const UserAvatar: FC<Props> = ({ user, className }) => {
+const UserAvatar: FC = ({ user, className }) => {
 	if (!user) return <Fragment />;
 
 	return (
