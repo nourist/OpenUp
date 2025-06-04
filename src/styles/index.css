@@ -59,3 +59,11 @@ a,
 button {
 	@apply cursor-pointer;
 }
+
+button {
+	@apply disabled:pointer-events-none disabled:opacity-50;
+}
+
+input {
+	@apply bg-base-content/4 focus:outline-primary h-10 w-full rounded-lg p-4 text-sm;
+}

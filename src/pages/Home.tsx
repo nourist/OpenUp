@@ -1,15 +1,17 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { ArrowRight, Smile, Clock, Lock } from 'lucide-react';
+import { ArrowRight, Smile, Clock, Lock, MessageCircle } from 'lucide-react';
 import GroupChat from '~/assets/group-chat.svg';
 import GroupChat2 from '~/assets/group-chat-2.svg';
 import ChatMention from '~/assets/chat-mention.svg';
 import ConnectedWorld from '~/assets/connected-world.svg';
 
+import { useUserStore } from '~/stores/userStore';
 import logo from '~/assets/logo.png';
 
 const Home = () => {
 	const { t } = useTranslation('home');
+	const { user } = useUserStore();
 
 	return (
 		<div className="bg-base-100 px-8 md:px-28">
@@ -35,12 +37,21 @@ const Home = () => {
 						{t('about')}
 					</button>
 				</div>
-				<Link className="text-primary mr-5 ml-auto capitalize hover:underline md:ml-0" to="/signin">
-					{t('sign-in')}
-				</Link>
-				<Link className="bg-primary text-base-100 rounded-full px-4 py-2 capitalize hover:shadow-md" to="/signup">
-					{t('sign-up')}
-				</Link>
+				{user ? (
+					<Link className="bg-primary text-base-100 ml-auto flex items-center gap-2 rounded-full px-4 py-2 capitalize hover:shadow-md" to="/app">
+						{t('open-app')}
+						<MessageCircle size="18" />
+					</Link>
+				) : (
+					<>
+						<Link className="text-primary mr-5 ml-auto capitalize hover:underline md:ml-0" to="/signin">
+							{t('sign-in')}
+						</Link>
+						<Link className="bg-primary text-base-100 rounded-full px-4 py-2 capitalize hover:shadow-md" to="/signup">
+							{t('sign-up')}
+						</Link>
+					</>
+				)}
 			</header>
 			<div className="flex min-h-[100vh] flex-col gap-24 pt-24 md:flex-row">
 				<div className="py-20 md:max-w-[min(384px,36%)]">
