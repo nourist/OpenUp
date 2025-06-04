@@ -28,7 +28,7 @@ const AppRouter = () => {
 
 	if (isLoading)
 		return (
-			<div className="bg-base-200 h-[100vh]">
+			<div className="bg-base-100 h-[100vh]">
 				<Loading />
 			</div>
 		);
@@ -39,6 +39,7 @@ const AppRouter = () => {
 				{routes.map((route, index) => {
 					return <Route key={index} path={route.path} element={route.auth && !user ? <Navigate to="/" /> : <route.page />} />;
 				})}
+				<Route path="*" element={user ? <Navigate to="/app" /> : <Navigate to="/" />} />
 			</Routes>
 		</Router>
 	);
@@ -48,7 +49,7 @@ const App = () => {
 	return (
 		<Suspense
 			fallback={
-				<div className="bg-base-200 h-[100vh]">
+				<div className="bg-base-100 h-[100vh]">
 					<Loading />
 				</div>
 			}

@@ -81,7 +81,7 @@
 /* Success Toast */
 .Toastify__toast--success {
 	background-color: var(--color-success);
-	color: var(--color-base-content);
+	color: var(--color-success-content);
 	border-color: oklch(0.508 0.118 165.612); /* emerald-700 */
 }
 
@@ -94,7 +94,7 @@
 /* Error Toast */
 .Toastify__toast--error {
 	background-color: var(--color-error);
-	color: var(--color-base-content);
+	color: var(--color-error-content);
 	border-color: oklch(0.514 0.222 16.935); /* rose-700 */
 }
 
@@ -107,7 +107,7 @@
 /* Info Toast */
 .Toastify__toast--info {
 	background-color: var(--color-info);
-	color: var(--color-base-content);
+	color: var(--color-info-content);
 	border-color: oklch(0.5 0.134 242.749); /* sky-700 */
 }
 
@@ -120,7 +120,7 @@
 /* Warning Toast */
 .Toastify__toast--warning {
 	background-color: var(--color-warning);
-	color: var(--color-base-content);
+	color: var(--color-warning-content);
 	border-color: oklch(0.41 0.112 45.904); /* amber-900 */
 }
 
@@ -133,7 +133,7 @@
 /* Default Toast */
 .Toastify__toast--default {
 	background-color: var(--color-primary);
-	color: var(--color-base-content);
+	color: var(--color-primary-content);
 	border-color: oklch(0.446 0.043 257.281); /* slate-600 */
 }
 
@@ -178,7 +178,7 @@
 }
 
 .Toastify__progress-bar--success {
-	background-color: var(--color-base-content);
+	background-color: var(--color-success-content);
 }
 
 .dark .Toastify__progress-bar--success {
@@ -186,7 +186,7 @@
 }
 
 .Toastify__progress-bar--error {
-	background-color: var(--color-base-content);
+	background-color: var(--color-error-content);
 }
 
 .dark .Toastify__progress-bar--error {
@@ -194,7 +194,7 @@
 }
 
 .Toastify__progress-bar--info {
-	background-color: var(--color-base-content);
+	background-color: var(--color-info-content);
 }
 
 .dark .Toastify__progress-bar--info {
@@ -202,7 +202,7 @@
 }
 
 .Toastify__progress-bar--warning {
-	background-color: var(--color-base-content);
+	background-color: var(--color-warning-content);
 }
 
 .dark .Toastify__progress-bar--warning {
@@ -210,7 +210,7 @@
 }
 
 .Toastify__progress-bar--default {
-	background-color: var(--color-base-content);
+	background-color: var(--color-primary-content);
 }
 
 .dark .Toastify__progress-bar--default {

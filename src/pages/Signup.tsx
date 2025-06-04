@@ -73,7 +73,7 @@ const Signup = () => {
 							{t('sign-up')}
 						</button>
 						<div className="text-base-content/80 my-4 flex justify-center gap-1 text-sm">
-							<p>{t('already-have-a-account').capitalize()}?</p>{' '}
+							<p>{t('already-have-a-account').capitalize()}?</p>
 							<Link to="/signin" className="text-primary font-medium capitalize hover:underline">
 								{t('sign-in')}
 							</Link>

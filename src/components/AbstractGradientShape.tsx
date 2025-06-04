@@ -1,10 +1,8 @@
-import { FC } from 'react';
-
 interface Props {
 	className?: string;
 }
 
-const AbstractGradientShape: FC = ({ className }) => {
+const AbstractGradientShape = ({ className }: Props) => {
 	return (
 		<div className={`relative overflow-hidden ${className}`}>
 			<div className="from-secondary/20 to-primary/20 absolute -top-20 -left-18 h-full w-[75%] -rotate-45 rounded-full bg-gradient-to-br p-8">

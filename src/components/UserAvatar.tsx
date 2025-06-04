@@ -1,4 +1,4 @@
-import { FC, Fragment } from 'react';
+import { Fragment } from 'react';
 
 import { getShortName } from '~/utils/avatar';
 import { stringToBrightColor } from '~/utils/color';
@@ -8,7 +8,7 @@ interface Props {
 	className?: string;
 }
 
-const UserAvatar: FC = ({ user, className }) => {
+const UserAvatar = ({ user, className }: Props) => {
 	if (!user) return <Fragment />;
 
 	return (

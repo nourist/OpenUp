@@ -38,7 +38,7 @@ const Home = () => {
 					</button>
 				</div>
 				{user ? (
-					<Link className="bg-primary ml-auto flex items-center gap-2 rounded-full px-4 py-2 text-white capitalize hover:shadow-md" to="/app">
+					<Link className="bg-primary ml-auto flex items-center gap-2 rounded-full px-4 py-2 text-white capitalize hover:shadow-md md:ml-0" to="/app">
 						{t('open-app')}
 						<MessageCircle size="18" />
 					</Link>
