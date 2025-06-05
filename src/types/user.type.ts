@@ -1,9 +1,3 @@
-export type NotificationType =
-	| 'message' // Tin nhắn
-	| 'friend_request' // Lời mời kết bạn
-	| 'group_invite' // Mời vào nhóm
-	| 'mention'; // Được tag
-
 export type LanguageType =
 	| 'en' // Toàn cầu
 	| 'vi' // Đông Nam Á
@@ -18,20 +12,6 @@ export type LanguageType =
 	| 'pt' // Brazil / Bồ Đào Nha
 	| 'ko' // Hàn Quốc
 	| 'tr'; // Thổ Nhĩ Kỳ
-
-export interface Notification {
-	type: NotificationType;
-	title: string;
-	body: string;
-
-	isRead: boolean;
-
-	friendId?: string; //friend_request
-	groupId?: string; //group_invite
-	messageId?: string; //message, mention
-
-	createdAt: Date;
-}
 
 export interface NotificationSettings {
 	notificationEnabled: boolean;
@@ -67,8 +47,6 @@ export interface User {
 	createdAt: Date;
 
 	settings: UserSettings;
-
-	notifications: Notification[];
 
 	blockedUsers: string[];
 	friendList: string[];

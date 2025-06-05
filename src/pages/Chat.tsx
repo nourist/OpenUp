@@ -1,5 +1,12 @@
+import ChatList from '~/components/ChatList';
+
 const Chat = () => {
-	return <></>;
+	return (
+		<>
+			<ChatList />
+			<div className="flex-1 bg-base-200 h-full sm:block hidden"></div>
+		</>
+	);
 };
 
 export default Chat;

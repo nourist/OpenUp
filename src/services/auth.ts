@@ -34,8 +34,6 @@ export const signup = (email: string, password: string, displayName: string) =>
 				language: 'en',
 			},
 
-			notifications: [],
-
 			blockedUsers: [],
 			friendList: [],
 			invitedList: [],
@@ -77,8 +75,6 @@ export const googleSignin = () =>
 					},
 					language: 'en',
 				},
-
-				notifications: [],
 
 				blockedUsers: [],
 				friendList: [],
