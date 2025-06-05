@@ -4,7 +4,7 @@ const Chat = () => {
 	return (
 		<>
 			<ChatList />
-			<div className="flex-1 bg-base-200 h-full sm:block hidden"></div>
+			<div className="flex-1 bg-base-200 sm:block hidden"></div>
 		</>
 	);
 };

@@ -13,7 +13,7 @@ const AppSidebar = () => {
 	const { user } = useUserStore();
 
 	return (
-		<div className="w-18 bg-base-100 h-full py-3 flex flex-col items-center border border-base-content/15 space-y-3">
+		<div className="w-18 bg-base-100 py-3 flex flex-col items-center border border-base-content/15 space-y-3">
 			<NavLink to="/">
 				<img src={logo} alt="" className="size-12" />
 			</NavLink>
