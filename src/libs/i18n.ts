@@ -20,6 +20,7 @@ export const locales = {
 
 const options: InitOptions = {
 	lng: 'en',
+	defaultNS: 'layout',
 	interpolation: {
 		escapeValue: false,
 	},

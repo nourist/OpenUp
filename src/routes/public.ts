@@ -8,18 +8,22 @@ const publicRoutes: Route[] = [
 	{
 		path: '/',
 		page: Home,
+		layout: null,
 	},
 	{
 		path: '/signin',
 		page: Signin,
+		layout: null,
 	},
 	{
 		path: '/signup',
 		page: Signup,
+		layout: null,
 	},
 	{
 		path: '/forgot-password',
 		page: ForgotPassword,
+		layout: null,
 	},
 ];
 

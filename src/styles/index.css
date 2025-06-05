@@ -2,8 +2,8 @@
 
 @theme {
 	--color-base-100: oklch(100% 0 0);
-	--color-base-200: oklch(97.466% 0.011 259.822);
-	--color-base-300: oklch(93.268% 0.016 262.751);
+	--color-base-200: oklch(98% 0 0);
+	--color-base-300: oklch(95% 0 0);
 	--color-base-content: oklch(31.886% 0.073 255.824);
 
 	--color-primary: #ff5e3a;
@@ -50,6 +50,10 @@
 	}
 }
 
+@utility flex-center {
+	@apply flex items-center justify-center;
+}
+
 html {
 	font-family: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 	color: var(--color-base-content);
@@ -66,4 +70,16 @@ button {
 
 input {
 	@apply bg-base-content/4 focus:outline-primary h-10 w-full rounded-lg p-4 text-sm;
+}
+
+.menu-items {
+	@apply absolute right-0 z-10 mt-4 w-40 origin-top-right rounded-md bg-base-100 shadow-lg ring-1 ring-base-content/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in;
+}
+
+.menu-item {
+	@apply flex px-4 items-center gap-2 py-2 text-sm capitalize data-focus:bg-base-300 data-focus:outline-hidden w-full;
+}
+
+.menu-item.danger {
+	@apply data-focus:bg-error/10 data-focus:text-error;
 }

@@ -5,7 +5,7 @@ import { stringToBrightColor } from '~/utils/color';
 import { User } from '~/types/user.type';
 
 interface Props {
-	user?: User;
+	user?: User | null;
 	className?: string;
 }
 

@@ -1,12 +1,13 @@
 import { Navigate, BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, Fragment } from 'react';
 import { ToastContainer } from 'react-toastify';
 
 import './styles/index.css';
 import './styles/toast.css';
 import './styles/loading.css';
 
+import AppLayout from '~/layouts/AppLayout';
 import useOnlineStatus from './hooks/useOnlineStatus';
 import { auth } from './libs/firebase';
 import { useUserStore } from './stores/userStore';
@@ -36,7 +37,22 @@ const AppRouter = () => {
 		<Router>
 			<Routes>
 				{routes.map((route, index) => {
-					return <Route key={index} path={route.path} element={route.auth && !user ? <Navigate to="/" /> : <route.page />} />;
+					const Layout = route.layout === null ? Fragment : route.layout || AppLayout;
+					return (
+						<Route
+							key={index}
+							path={route.path}
+							element={
+								route.auth && !user ? (
+									<Navigate to="/" />
+								) : (
+									<Layout>
+										<route.page />
+									</Layout>
+								)
+							}
+						/>
+					);
 				})}
 				<Route path="*" element={user ? <Navigate to="/app" /> : <Navigate to="/" />} />
 			</Routes>
