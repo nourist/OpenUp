@@ -1,7 +1,7 @@
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { useEffect, useState } from 'react';
 
-const useUserOnlineStatus = (userId:string) => {
+const useUserOnlineStatus = (userId: string) => {
 	const [status, setStatus] = useState({ state: 'offline', last_changed: null });
 
 	useEffect(() => {
