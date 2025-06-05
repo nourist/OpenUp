@@ -1,9 +1,9 @@
 export const hslToRgb = (h: number, s: number, l: number) => {
 	s /= 100;
 	l /= 100;
-	let c = (1 - Math.abs(2 * l - 1)) * s;
-	let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-	let m = l - c / 2;
+	const c = (1 - Math.abs(2 * l - 1)) * s;
+	const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+	const m = l - c / 2;
 
 	let r, g, b;
 	if (h >= 0 && h < 60) {

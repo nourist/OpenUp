@@ -10,9 +10,35 @@ export const signup = (email: string, password: string, displayName: string) =>
 		const user = res.user;
 
 		await setDoc(doc(db, 'users', user.uid), {
-			displayName,
 			email,
 			id: user.uid,
+			displayName,
+
+			createdAt: new Date(),
+
+			settings: {
+				notification: {
+					notificationEnabled: true,
+					soundEnabled: true,
+
+					messageNotification: false,
+					mentionNotification: false,
+					groupInviteNotification: true,
+					friendRequestNotification: true,
+
+					messageSound: true,
+					mentionSound: true,
+					groupInviteSound: true,
+					friendRequestSound: true,
+				},
+				language: 'en',
+			},
+
+			notifications: [],
+
+			blockedUsers: [],
+			friendList: [],
+			invitedList: [],
 		});
 	});
 
@@ -31,6 +57,32 @@ export const googleSignin = () =>
 				email: user.email,
 				id: user.uid,
 				avatar: user.photoURL,
+
+				createdAt: new Date(),
+
+				settings: {
+					notification: {
+						notificationEnabled: true,
+						soundEnabled: true,
+
+						messageNotification: false,
+						mentionNotification: false,
+						groupInviteNotification: true,
+						friendRequestNotification: true,
+
+						messageSound: true,
+						mentionSound: true,
+						groupInviteSound: true,
+						friendRequestSound: true,
+					},
+					language: 'en',
+				},
+
+				notifications: [],
+
+				blockedUsers: [],
+				friendList: [],
+				invitedList: [],
 			});
 		}
 	});

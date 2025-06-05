@@ -1,11 +1,13 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { create } from 'zustand';
+
+import { User } from '~/types/user.type';
 import { db } from '~/libs/firebase';
 
 interface UserState {
-	user: any;
+	user: User | null;
 	isLoading: boolean;
-	fetchUserInfo: (uid?: string) => Promise;
+	fetchUserInfo: (uid?: string) => Promise<void>;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -19,7 +21,7 @@ export const useUserStore = create<UserState>((set) => ({
 			const docSnap = await getDoc(docRef);
 
 			if (docSnap.exists()) {
-				set({ user: docSnap.data(), isLoading: false });
+				set({ user: docSnap.data() as User, isLoading: false });
 			} else {
 				set({ user: null, isLoading: false });
 			}

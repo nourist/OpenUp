@@ -19,19 +19,36 @@ const Home = () => {
 				<img className="size-10" src={logo} alt="" />
 				<h1 className="text-primary text-2xl font-bold">OpenUp</h1>
 				<div className="text-base-content/80 mx-auto hidden space-x-12 font-medium md:block">
-					<button onClick={() => window.scrollTo({ left: 0, top: 0, behavior: 'smooth' })} className="hover:text-base-content capitalize">
+					<button
+						onClick={() =>
+							window.scrollTo({
+								left: 0,
+								top: 0,
+								behavior: 'smooth',
+							})
+						}
+						className="hover:text-base-content capitalize"
+					>
 						{t('home')}
 					</button>
 					<button
 						onClick={() =>
-							window.scrollTo({ top: (document.getElementById('feature-point')?.getBoundingClientRect().top || 0) + window.pageYOffset - 100, behavior: 'smooth' })
+							window.scrollTo({
+								top: (document.getElementById('feature-point')?.getBoundingClientRect().top || 0) + window.pageYOffset - 100,
+								behavior: 'smooth',
+							})
 						}
 						className="hover:text-base-content capitalize"
 					>
 						{t('features')}
 					</button>
 					<button
-						onClick={() => document.getElementById('footer-point')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+						onClick={() =>
+							document.getElementById('footer-point')?.scrollIntoView({
+								behavior: 'smooth',
+								block: 'start',
+							})
+						}
 						className="hover:text-base-content capitalize"
 					>
 						{t('about')}

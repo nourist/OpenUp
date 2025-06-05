@@ -1,4 +1,4 @@
-import { Route } from '~/types/route';
+import { Route } from '~/types/route.type';
 import Home from '~/pages/Home';
 import Signin from '~/pages/Signin';
 import Signup from '~/pages/Signup';

@@ -20,13 +20,12 @@ export const locales = {
 
 const options: InitOptions = {
 	lng: 'en',
-	defaultNS: 'layout',
 	interpolation: {
 		escapeValue: false,
 	},
 	debug: true,
 	saveMissing: true,
-	missingKeyHandler: (lng, ns, key, _, __, ___) => {
+	missingKeyHandler: (lng, ns, key) => {
 		console.warn(`[i18next] Missing key: '${key}' in namespace: '${ns}', language: '${lng}'`);
 	},
 };

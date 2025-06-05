@@ -1,12 +1,13 @@
 import { Navigate, BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect, Suspense, startTransition } from 'react';
+import { useEffect, Suspense } from 'react';
 import { ToastContainer } from 'react-toastify';
 
 import './styles/index.css';
 import './styles/toast.css';
 import './styles/loading.css';
 
+import useOnlineStatus from './hooks/useOnlineStatus';
 import { auth } from './libs/firebase';
 import { useUserStore } from './stores/userStore';
 import routes from './routes';
@@ -18,9 +19,7 @@ const AppRouter = () => {
 
 	useEffect(() => {
 		const unSub = onAuthStateChanged(auth, (user) => {
-			startTransition(() => {
-				fetchUserInfo(user?.uid);
-			});
+			fetchUserInfo(user?.uid);
 		});
 
 		return unSub;
@@ -46,14 +45,10 @@ const AppRouter = () => {
 };
 
 const App = () => {
+	useOnlineStatus();
+
 	return (
-		<Suspense
-			fallback={
-				<div className="bg-base-100 h-[100vh]">
-					<Loading />
-				</div>
-			}
-		>
+		<Suspense>
 			<AppRouter />
 			<ToastContainer
 				position="bottom-right"

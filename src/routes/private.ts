@@ -1,4 +1,4 @@
-import { Route } from '~/types/route';
+import { Route } from '~/types/route.type';
 import Chat from '~/pages/Chat';
 
 const privateRoutes: Route[] = [

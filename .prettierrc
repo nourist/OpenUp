@@ -16,6 +16,5 @@
 	"trailingComma": "all",
 	"useTabs": true,
 	"vueIndentScriptAndStyle": false,
-	"endOfLine": "crlf",
-	"plugins": ["prettier-plugin-tailwindcss"]
+	"endOfLine": "crlf"
 }
