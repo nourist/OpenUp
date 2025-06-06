@@ -5,5 +5,7 @@
 	"friend-request": "friend request",
 	"group-invitation": "group invitation",
 	"my-request": "my request",
-	"discover-friends": "discover friends"
+	"discover-friends": "discover friends",
+	"discover-new-friends": "discover new friends",
+	"type-something-to-search": "type something to search"
 }

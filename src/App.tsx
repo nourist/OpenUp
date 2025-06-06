@@ -2,6 +2,7 @@ import { Navigate, BrowserRouter as Router, Routes, Route } from 'react-router-d
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, Suspense, Fragment } from 'react';
 import { ToastContainer } from 'react-toastify';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import './styles/index.css';
 import './styles/toast.css';
@@ -14,6 +15,8 @@ import { useUserStore } from './stores/userStore';
 import routes from './routes';
 import './libs/i18n';
 import Loading from './components/Loading';
+
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchInterval: 180000 } } });
 
 const AppRouter = () => {
 	const { user, isLoading, fetchUserInfo } = useUserStore();
@@ -65,20 +68,22 @@ const App = () => {
 
 	return (
 		<Suspense>
-			<AppRouter />
-			<ToastContainer
-				position="bottom-right"
-				autoClose={5000}
-				hideProgressBar={false}
-				newestOnTop
-				closeOnClick
-				rtl={false}
-				pauseOnFocusLoss
-				draggable
-				pauseOnHover
-				className="!bg-transparent"
-				toastClassName="toast-modern toast-luxury toast-glass"
-			/>
+			<QueryClientProvider client={queryClient}>
+				<AppRouter />
+				<ToastContainer
+					position="bottom-right"
+					autoClose={5000}
+					hideProgressBar={false}
+					newestOnTop
+					closeOnClick
+					rtl={false}
+					pauseOnFocusLoss
+					draggable
+					pauseOnHover
+					className="!bg-transparent"
+					toastClassName="toast-modern toast-luxury toast-glass"
+				/>
+			</QueryClientProvider>
 		</Suspense>
 	);
 };

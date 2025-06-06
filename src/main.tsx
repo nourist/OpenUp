@@ -4,7 +4,7 @@ import App from './App.tsx';
 
 String.prototype.capitalize = function () {
 	if (typeof this !== 'string') return '';
-	let res = this.split('');
+	const res = this.split('');
 
 	if (res.length != 0) {
 		res[0] = res[0].toUpperCase();
