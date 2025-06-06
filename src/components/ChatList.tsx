@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, UserRoundPlus, Users } from 'lucide-react';
 import { useState } from 'react';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 
 const ChatList = () => {
 	const { t } = useTranslation('chat');
@@ -30,9 +31,27 @@ const ChatList = () => {
 							<Search size="18" />
 						</label>
 					</div>
-					<button className="size-10 bg-primary/90 hover:bg-primary rounded-full hover:shadow-sm text-white flex-center hover:*:size-6 transition-all duration-200">
-						<Plus size="18" className="transition-all duration-200" />
-					</button>
+					<Menu>
+						<MenuButton className="size-10 bg-primary/90 hover:bg-primary rounded-full hover:shadow-sm text-white flex-center hover:*:size-6 transition-all duration-200">
+							<Plus size="18" className="transition-all duration-200" />
+						</MenuButton>
+						<div className="mt-4">
+							<MenuItems className={'menu-items'}>
+								<MenuItem>
+									<button className="menu-item">
+										<UserRoundPlus />
+										{t('make-new-friend')}
+									</button>
+								</MenuItem>
+								<MenuItem>
+									<button className="menu-item">
+										<Users />
+										{t('create-new-group')}
+									</button>
+								</MenuItem>
+							</MenuItems>
+						</div>
+					</Menu>
 				</div>
 			</div>
 			{/*tabs */}

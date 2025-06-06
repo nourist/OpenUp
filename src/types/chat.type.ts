@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 import { MessageType } from './message.type';
 
 export interface Chat {
@@ -8,12 +10,12 @@ export interface Chat {
 		content: string;
 		senderId: string;
 		type: MessageType;
-		timestamp: Date;
+		timestamp: Timestamp;
 	};
 	isMuted?: Record<string, boolean>;
 	isPinned?: Record<string, boolean>;
 
-	createdAt: Date;
+	createdAt: Timestamp;
 	totalMessages: number;
 	unreadCount?: Record<string, number>;
 }

@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 import { MessageType } from './message.type';
 
 export type GroupRole = 'owner' | 'admin' | 'member';
@@ -7,14 +9,14 @@ export interface GroupMember {
 	role: GroupRole;
 	addedBy?: string; // userId
 	isActive: boolean; // false if left/removed
-	joinedAt: Date;
-	leftAt?: Date;
+	joinedAt: Timestamp;
+	leftAt?: Timestamp;
 }
 
 export interface GroupSettings {
 	allowInviteLink: boolean;
 	inviteLink: string;
-	inviteLinkExpiresAt: Date;
+	inviteLinkExpiresAt: Timestamp;
 
 	onlyAdminsCanPost: boolean;
 	allowMemberAddOthers: boolean;
@@ -48,7 +50,7 @@ export interface Group {
 		senderId: string;
 		senderName: string;
 		type: MessageType;
-		timestamp: Date;
+		timestamp: Timestamp;
 	};
 
 	// User-specific settings
@@ -62,7 +64,7 @@ export interface Group {
 	>;
 
 	// Timestamps
-	createdAt: Date;
+	createdAt: Timestamp;
 
 	// Stats
 	totalMessages: number;

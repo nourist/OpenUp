@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type MessageType = 'text' | 'image' | 'file' | 'video' | 'gif';
 
 export type MessageStatus = 'sending' | 'sent' | 'failed';
@@ -20,12 +22,12 @@ export interface Message {
 	isForwarded?: boolean;
 	forwardedFrom?: string;
 	status: MessageStatus;
-	readBy?: Record<string, Date>;
+	readBy?: Record<string, Timestamp>;
 	isEdited: boolean;
 
-	createdAt: Date;
+	createdAt: Timestamp;
 
 	isDeleted: boolean;
-	deletedAt?: Date;
+	deletedAt?: Timestamp;
 	deletedBy?: string;
 }

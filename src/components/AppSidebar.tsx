@@ -7,10 +7,12 @@ import { useUserStore } from '~/stores/userStore';
 import UserAvatar from './UserAvatar';
 import { auth } from '~/libs/firebase';
 import logo from '~/assets/logo.png';
+import useUserViewStore from '~/stores/userViewStore';
 
 const AppSidebar = () => {
 	const { t } = useTranslation();
 	const { user } = useUserStore();
+	const { setUser: setViewUser } = useUserViewStore();
 
 	return (
 		<div className="w-18 bg-base-100 py-3 flex flex-col items-center border border-base-content/15 space-y-3">
@@ -33,6 +35,7 @@ const AppSidebar = () => {
 				<Users />
 			</NavLink>
 			<button
+				onClick={() => setViewUser(user)}
 				title={t('view-profile').capitalize()}
 				className="size-12 mt-auto aria-[current=page]:bg-primary hover:-translate-y-0.5 aria-[current=page]:text-white flex-center bg-base-300 rounded-lg hover:bg-base-content/15 transition duration-200"
 			>

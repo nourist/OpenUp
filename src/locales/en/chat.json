@@ -3,5 +3,7 @@
 	"all": "all",
 	"friends": "friends",
 	"groups": "groups",
-	"search": "search"
+	"search": "search",
+	"make-new-friend": "make new friend",
+	"create-new-group": "create new group"
 }

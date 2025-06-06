@@ -1,5 +1,5 @@
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { setDoc, doc, getDoc } from 'firebase/firestore';
+import { setDoc, doc, getDoc, Timestamp } from 'firebase/firestore';
 
 import { auth, db } from '~/libs/firebase';
 
@@ -14,7 +14,7 @@ export const signup = (email: string, password: string, displayName: string) =>
 			id: user.uid,
 			displayName,
 
-			createdAt: new Date(),
+			createdAt: Timestamp.fromDate(new Date()),
 
 			settings: {
 				notification: {
@@ -36,7 +36,6 @@ export const signup = (email: string, password: string, displayName: string) =>
 
 			blockedUsers: [],
 			friendList: [],
-			invitedList: [],
 		});
 	});
 
@@ -56,7 +55,7 @@ export const googleSignin = () =>
 				id: user.uid,
 				avatar: user.photoURL,
 
-				createdAt: new Date(),
+				createdAt: Timestamp.fromDate(new Date()),
 
 				settings: {
 					notification: {
@@ -78,7 +77,6 @@ export const googleSignin = () =>
 
 				blockedUsers: [],
 				friendList: [],
-				invitedList: [],
 			});
 		}
 	});

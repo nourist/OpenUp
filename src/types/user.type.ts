@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type LanguageType =
 	| 'en' // Toàn cầu
 	| 'vi' // Đông Nam Á
@@ -41,14 +43,14 @@ export interface User {
 	bio?: string;
 	avatar?: string;
 	bgAvatar?: string;
-	birthday?: Date;
+	dateOfBirth?: Timestamp;
+	gender?: 'male' | 'female' | 'other';
 
 	status?: 'free' | 'busy' | 'away';
-	createdAt: Date;
+	createdAt: Timestamp;
 
 	settings: UserSettings;
 
 	blockedUsers: string[];
 	friendList: string[];
-	invitedList: string[];
 }
