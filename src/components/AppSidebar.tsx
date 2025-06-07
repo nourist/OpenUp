@@ -6,7 +6,7 @@ import { signOut } from 'firebase/auth';
 import { useUserStore } from '~/stores/userStore';
 import UserAvatar from './UserAvatar';
 import { auth } from '~/libs/firebase';
-import logo from '~/assets/logo.png';
+import Logo from '~/assets/logo.svg';
 import useUserViewStore from '~/stores/userViewStore';
 
 const AppSidebar = () => {
@@ -17,7 +17,9 @@ const AppSidebar = () => {
 	return (
 		<div className="w-18 bg-base-100 py-3 flex flex-col items-center border border-base-content/15 space-y-3">
 			<NavLink to="/">
-				<img src={logo} alt="" className="size-12" />
+				<div className='p-1'>
+					<Logo height="40" width="40" />
+				</div>
 			</NavLink>
 			<div className="h-[1px] w-8 bg-base-content/20"></div>
 			<NavLink

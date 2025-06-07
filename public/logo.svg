@@ -1,0 +1,10 @@
+<svg viewBox="0 0 212 212" xmlns="http://www.w3.org/2000/svg">
+<!--Back chat bubble (lighter coral)-->
+  <path d="M56 36 L176 36 Q196 36 196 56 L196 116 Q196 136 176 136 L136 136 L136 156 L116 136 L76 136 Q56 136 56 116 L56 56 Q56 36 76 36 Z" fill="#cfa5f3"/>
+<!--Front chat bubble (main coral)-->
+  <path d="M16 56 L136 56 Q156 56 156 76 L156 136 Q156 156 136 156 L96 156 L96 176 L76 156 L36 156 Q16 156 16 136 L16 76 Q16 56 36 56 Z" fill="#ff5e3a"/>
+<!--Three dots in front bubble (centered and slightly larger)-->
+  <circle cx="56" cy="106" r="10" fill="#ffffff" opacity="0.9"/>
+  <circle cx="86" cy="106" r="10" fill="#ffffff" opacity="0.9"/>
+  <circle cx="116" cy="106" r="10" fill="#ffffff" opacity="0.9"/>
+</svg>

@@ -7,7 +7,7 @@ import ChatMention from '~/assets/chat-mention.svg';
 import ConnectedWorld from '~/assets/connected-world.svg';
 
 import { useUserStore } from '~/stores/userStore';
-import logo from '~/assets/logo.png';
+import Logo from '~/assets/logo.svg';
 
 const Home = () => {
 	const { t } = useTranslation('home');
@@ -16,7 +16,7 @@ const Home = () => {
 	return (
 		<div className="bg-base-100 px-8 md:px-28">
 			<header className="fixed top-4 right-8 left-8 flex h-16 items-center gap-1 rounded-xl bg-white/3 p-3 text-sm backdrop-blur-xl md:right-28 md:left-28">
-				<img className="size-10" src={logo} alt="" />
+				<Logo height="40" width="40" />
 				<h1 className="text-primary text-2xl font-bold">OpenUp</h1>
 				<div className="text-base-content/80 mx-auto hidden space-x-12 font-medium md:block">
 					<button
