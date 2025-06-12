@@ -2,6 +2,7 @@ import { Navigate, BrowserRouter as Router, Routes, Route } from 'react-router-d
 import { Suspense, Fragment, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 import './styles/index.css';
 import './styles/toast.css';
@@ -74,22 +75,24 @@ const App = () => {
 
 	return (
 		<Suspense>
-			<QueryClientProvider client={queryClient}>
-				<AppRouter />
-				<ToastContainer
-					position="bottom-right"
-					autoClose={5000}
-					hideProgressBar={false}
-					newestOnTop
-					closeOnClick
-					rtl={false}
-					pauseOnFocusLoss
-					draggable
-					pauseOnHover
-					className="!bg-transparent"
-					toastClassName="toast-modern toast-luxury toast-glass"
-				/>
-			</QueryClientProvider>
+			<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+				<QueryClientProvider client={queryClient}>
+					<AppRouter />
+					<ToastContainer
+						position="bottom-right"
+						autoClose={5000}
+						hideProgressBar={false}
+						newestOnTop
+						closeOnClick
+						rtl={false}
+						pauseOnFocusLoss
+						draggable
+						pauseOnHover
+						className="!bg-transparent"
+						toastClassName="toast-modern toast-luxury toast-glass"
+					/>
+				</QueryClientProvider>
+			</GoogleOAuthProvider>
 		</Suspense>
 	);
 };

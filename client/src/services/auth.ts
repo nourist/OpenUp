@@ -23,3 +23,13 @@ export const signin = (email: string, password: string) =>
 			throw err.response.data.message;
 		})
 		.then((res) => res.data);
+
+export const googleSignin = (idToken: string) =>
+	http
+		.post('/auth/google-signin', { idToken })
+		.then((res) => res.data)
+		.catch((err) => {
+			throw err.response.data.message;
+		});
+
+export const signout = () => http.post('/auth/signout');
