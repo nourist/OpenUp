@@ -1,0 +1,33 @@
+.loading {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) scale(2);
+}
+
+.loading svg polyline {
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.loading svg polyline#back {
+	stroke: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.loading svg polyline#front {
+	stroke: var(--color-primary);
+	stroke-dasharray: 12, 36;
+	stroke-dashoffset: 48;
+	animation: dash 1s linear infinite;
+}
+
+@keyframes dash {
+	62.5% {
+		opacity: 0;
+	}
+	100% {
+		stroke-dashoffset: 0;
+	}
+}

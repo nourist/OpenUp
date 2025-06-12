@@ -1,0 +1,90 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--color-base-100: #f6f6f6;
+	--color-base-200: #efefef;
+	--color-base-300: #e9e9e9;
+	--color-base-content: #02001a;
+
+	--color-neutral: #02001a;
+	--color-neutral-content: #fff;
+
+	--color-primary: #ff4e3a;
+	--color-secondary: #8e2de2;
+	--color-accent: #00d4ff;
+
+	--color-info: oklch(74% 0.16 232.661);
+	--color-info-content: oklch(29% 0.066 243.157);
+
+	--color-success: oklch(76% 0.177 163.223);
+	--color-success-content: oklch(37% 0.077 168.94);
+
+	--color-warning: oklch(82% 0.189 84.429);
+	--color-warning-content: oklch(41% 0.112 45.904);
+
+	--color-error: oklch(71% 0.194 13.428);
+	--color-error-content: oklch(27% 0.105 12.094);
+}
+
+@layer theme {
+	.dark {
+		--color-base-100: oklch(22% 0.019 237.69);
+		--color-base-200: oklch(20% 0.019 237.69);
+		--color-base-300: oklch(18% 0.019 237.69);
+		--color-base-content: oklch(98.383% 0.043 245.096);
+
+		--color-primary: rgb(255, 85, 70);
+
+		--color-info: oklch(68.455% 0.148 237.251);
+		--color-info-content: oklch(0% 0 0);
+
+		--color-success: oklch(78.452% 0.132 181.911);
+		--color-success-content: oklch(15.69% 0.026 181.911);
+
+		--color-warning: oklch(83.242% 0.139 82.95);
+		--color-warning-content: oklch(16.648% 0.027 82.95);
+
+		--color-error: oklch(71.785% 0.17 13.118);
+		--color-error-content: oklch(14.357% 0.034 13.118);
+	}
+}
+
+@utility flex-center {
+	@apply flex items-center justify-center;
+}
+
+@utility skeleton {
+	@apply bg-base-content/15 animate-pulse;
+}
+
+@utility card-scrollbar {
+	@apply [&::-webkit-scrollbar-thumb]:bg-base-content/20 max-h-100 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent;
+}
+
+@utility menu-items {
+	@apply absolute right-0 z-10 mt-4 w-40 origin-top-right rounded-md bg-base-100 shadow-lg ring-1 ring-base-content/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in;
+}
+
+@utility menu-item {
+	@apply flex px-4 items-center gap-2 py-2 text-sm capitalize rounded-sm data-focus:bg-base-300 data-focus:outline-hidden w-full;
+}
+
+@utility menu-item.danger {
+	@apply data-focus:bg-error/10 data-focus:text-error;
+}
+
+html {
+	font-family: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	color: var(--color-base-content);
+}
+
+a,
+button {
+	@apply cursor-pointer;
+}
+
+button {
+	@apply disabled:pointer-events-none disabled:opacity-50;
+}
