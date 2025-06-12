@@ -51,32 +51,34 @@
 	}
 }
 
-@utility flex-center {
-	@apply flex items-center justify-center;
-}
+@layer utilities {
+	.flex-center {
+		@apply flex items-center justify-center;
+	}
 
-@utility skeleton {
-	@apply bg-base-content/15 animate-pulse;
-}
+	.skeleton {
+		@apply bg-base-content/15 animate-pulse;
+	}
 
-@utility card-scrollbar {
-	@apply [&::-webkit-scrollbar-thumb]:bg-base-content/20 max-h-100 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent;
-}
+	.card-scrollbar {
+		@apply [&::-webkit-scrollbar-thumb]:bg-base-content/20 max-h-100 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent;
+	}
 
-@utility menu-items {
-	@apply absolute right-0 z-10 mt-4 w-40 origin-top-right rounded-md bg-base-100 shadow-lg ring-1 ring-base-content/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in;
-}
+	.menu-items {
+		@apply absolute right-0 z-10 mt-4 w-40 origin-top-right rounded-md bg-base-100 shadow-lg ring-1 ring-base-content/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in;
+	}
 
-@utility menu-item {
-	@apply flex px-4 items-center gap-2 py-2 text-sm capitalize rounded-sm data-focus:bg-base-300 data-focus:outline-hidden w-full;
-}
+	.menu-item {
+		@apply flex px-4 items-center gap-2 py-2 text-sm capitalize rounded-sm data-focus:bg-base-300 data-focus:outline-hidden w-full;
+	}
 
-@utility menu-item.danger {
-	@apply data-focus:bg-error/10 data-focus:text-error;
-}
+	.menu-item.danger {
+		@apply data-focus:bg-error/10 data-focus:text-error;
+	}
 
-@utility input {
-	@apply bg-base-content/3 outline-none focus:ring-primary focus:ring-[1.5px] h-10 w-full rounded-lg p-4 text-sm;
+	.input {
+		@apply bg-base-content/3 outline-none focus:ring-primary focus:ring-[1.5px] h-10 w-full rounded-lg p-4 text-sm;
+	}
 }
 
 html {

@@ -1,5 +1,5 @@
 import { Navigate, BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Suspense, Fragment } from 'react';
+import { Suspense, Fragment, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -9,23 +9,18 @@ import './styles/loading.css';
 
 import useThemeListener from './hooks/useThemeListener';
 import useThemeChanger from './hooks/useThemeChanger';
+import useLanguageSync from './hooks/useLanguageSync';
 import AppLayout from '~/layouts/AppLayout';
 import useAuthStore from './stores/authStore';
 import routes from './routes';
 import './libs/i18n';
 import Loading from './components/Loading';
+import { fetchInfo } from './services/auth';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchInterval: 180000 } } });
 
 const AppRouter = () => {
-	const { user, isLoading } = useAuthStore();
-
-	if (isLoading)
-		return (
-			<div className="bg-base-100 h-[100vh]">
-				<Loading />
-			</div>
-		);
+	const { user } = useAuthStore();
 
 	return (
 		<Router>
@@ -57,8 +52,25 @@ const AppRouter = () => {
 };
 
 const App = () => {
+	const { isLoading, setUser, setLoading } = useAuthStore();
+
 	useThemeListener();
 	useThemeChanger();
+	useLanguageSync();
+
+	useEffect(() => {
+		fetchInfo()
+			.then(setUser ?? null)
+			.finally(() => setLoading(false));
+	}, []);
+
+	if (isLoading) {
+		return (
+			<div className="bg-base-100 h-[100vh]">
+				<Loading />
+			</div>
+		);
+	}
 
 	return (
 		<Suspense>
