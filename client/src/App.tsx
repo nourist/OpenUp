@@ -7,6 +7,8 @@ import './styles/index.css';
 import './styles/toast.css';
 import './styles/loading.css';
 
+import useThemeListener from './hooks/useThemeListener';
+import useThemeChanger from './hooks/useThemeChanger';
 import AppLayout from '~/layouts/AppLayout';
 import useAuthStore from './stores/authStore';
 import routes from './routes';
@@ -55,6 +57,9 @@ const AppRouter = () => {
 };
 
 const App = () => {
+	useThemeListener();
+	useThemeChanger();
+
 	return (
 		<Suspense>
 			<QueryClientProvider client={queryClient}>
