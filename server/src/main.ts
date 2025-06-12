@@ -1,4 +1,4 @@
-import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ValidationError } from 'class-validator';
 import * as cookieParser from 'cookie-parser';
@@ -8,18 +8,27 @@ import { AppModule } from './app.module';
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 
+	app.enableCors({
+		origin: process.env.CLIENT_URL || 'http://localhost:5173',
+		methods: ['GET', 'POST', 'PUT', 'DELETE'],
+		credentials: true, // nếu client gửi cookie
+	});
 	app.use(cookieParser());
 	app.useGlobalPipes(
 		new ValidationPipe({
 			exceptionFactory: (validationErrors: ValidationError[] = []) => {
-				return new BadRequestException(
-					validationErrors
-						.map((error) => ({
-							field: error.property,
-							error: Object.values(error?.constraints ?? {})[0],
-						}))
-						.map((item) => ({ [item.field]: item.error })),
-				);
+				return new UnprocessableEntityException({
+					statusCode: 422,
+					error: 'Unprocessable Entity',
+					message: 'Validation failed',
+					fieldErrors: validationErrors.reduce(
+						(acc, error) => ({
+							...acc,
+							[error.property]: Object.values(error?.constraints ?? {}).reduce((acc, cur) => cur, ''),
+						}),
+						{},
+					),
+				});
 			},
 		}),
 	);

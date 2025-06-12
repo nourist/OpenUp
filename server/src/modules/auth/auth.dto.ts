@@ -3,7 +3,7 @@ import { IsEmail, IsNotEmpty, IsString, IsStrongPassword, MaxLength } from 'clas
 export class SignupDto {
 	@IsNotEmpty()
 	@IsString()
-	@IsEmail()
+	@IsEmail({}, { message: 'email is not valid' })
 	email: string;
 
 	@IsNotEmpty()
@@ -26,7 +26,7 @@ export class SignupDto {
 export class SigninDto {
 	@IsNotEmpty()
 	@IsString()
-	@IsEmail()
+	@IsEmail({}, { message: 'email is not valid' })
 	email: string;
 
 	@IsNotEmpty()

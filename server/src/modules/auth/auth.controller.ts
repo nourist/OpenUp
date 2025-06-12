@@ -20,8 +20,11 @@ export class AuthController {
 
 	@Get()
 	@UseGuards(JwtAuthGuard)
-	getProfile(@GetUser() user: JwtPayload) {
-		return this.userService.findByEmail(user.email);
+	async getProfile(@GetUser() user: JwtPayload) {
+		return {
+			message: 'Get user profile successfully',
+			user: await this.userService.findByEmail(user.email),
+		};
 	}
 
 	@Post('signup')
@@ -37,13 +40,13 @@ export class AuthController {
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		});
 
-		return { message: 'Signup successful' };
+		return { message: 'Signup successful', user };
 	}
 
 	@Post('signin')
 	@UseGuards(LocalAuthGuard)
 	async signin(@Body() signinInfo: SigninDto, @Res({ passthrough: true }) res: Response) {
-		const { access_token } = await this.authService.signin(signinInfo);
+		const { access_token, user } = await this.authService.signin(signinInfo);
 
 		res.cookie('access_token', access_token, {
 			httpOnly: true,
@@ -52,13 +55,13 @@ export class AuthController {
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		});
 
-		return { message: 'Signin successful' };
+		return { message: 'Signin successful', user };
 	}
 
 	@Post('google-signin')
 	@UseGuards(GoogleAuthGuard)
-	async googleSignin(@GetUser() user: User, @Res({ passthrough: true }) res: Response) {
-		const { access_token } = await this.authService.signin(user);
+	async googleSignin(@GetUser() userInfo: User, @Res({ passthrough: true }) res: Response) {
+		const { access_token, user } = await this.authService.signin(userInfo);
 
 		res.cookie('access_token', access_token, {
 			httpOnly: true,
@@ -67,7 +70,7 @@ export class AuthController {
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		});
 
-		return { message: 'Signin successful' };
+		return { message: 'Signin successful', user };
 	}
 
 	@Post('signout')
