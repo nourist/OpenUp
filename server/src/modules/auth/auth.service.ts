@@ -20,12 +20,16 @@ export class AuthService {
 	async validateUser(email: string, password: string) {
 		const user = await this.userService.findByEmail(email);
 		if (!user) {
-			return null;
+			throw new Error('User not found');
+		}
+
+		if (!user.password) {
+			throw new Error("User doesn't have a password");
 		}
 
 		const isPasswordValid = bcrypt.compareSync(password, user.password);
 		if (!isPasswordValid) {
-			return null;
+			throw new Error('Invalid password');
 		}
 
 		return user;
@@ -37,8 +41,9 @@ export class AuthService {
 		return await this.userRepository.save(user);
 	}
 
-	login(userData: Partial<User>) {
-		const payload: JwtPayload = { email: userData.email!, sub: userData.id! };
+	async signin(userData: Partial<User>) {
+		const user = await this.userService.findByEmail(userData.email!);
+		const payload: JwtPayload = { email: user!.email, sub: user!.id };
 		return {
 			access_token: this.jwtService.sign(payload),
 		};

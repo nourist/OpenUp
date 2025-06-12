@@ -8,11 +8,14 @@ export class User {
 	@Column({ unique: true })
 	email: string;
 
-	@Column()
-	password: string;
+	@Column({ nullable: true })
+	password?: string;
 
 	@Column()
 	name: string;
+
+	@Column({ nullable: true })
+	avatar?: string;
 
 	@CreateDateColumn()
 	createdAt: Date;
