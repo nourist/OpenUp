@@ -32,10 +32,10 @@ export class Invitation {
 	})
 	status: InvitationStatus;
 
-	@ManyToOne(() => User, (user) => user.invitations)
+	@ManyToOne(() => User, (user) => user.invitations, { onDelete: 'CASCADE' })
 	from: User;
 
-	@ManyToOne(() => User)
+	@ManyToOne(() => User, { onDelete: 'CASCADE' })
 	to: User;
 
 	@Column({ default: '' })

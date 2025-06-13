@@ -49,12 +49,12 @@ export class FriendService {
 		});
 		const savedInvitation = await this.invitationRepository.save(invitation);
 
-		if(to.settings.notification.friendRequest){
-		const notification = this.notificationRepository.create({
-			user: to,
-			type: NotificationType.INVITATION,
-			invitation: savedInvitation,
-		});
+		if (to.settings.notification.friendRequest) {
+			const notification = this.notificationRepository.create({
+				user: to,
+				type: NotificationType.INVITATION,
+				invitation: savedInvitation,
+			});
 			await this.notificationRepository.save(notification);
 		}
 		return savedInvitation;

@@ -3,6 +3,7 @@ import { Exclude } from 'class-transformer';
 
 import { Notification } from './notification.entity';
 import { Invitation } from './invitation.entity';
+import { Chat } from './chat.entity';
 
 export interface UserSettings {
 	preferLanguage: string;
@@ -104,6 +105,9 @@ export class User {
 		},
 	})
 	settings: UserSettings;
+
+	@ManyToMany(() => Chat, (chat) => chat.participants)
+	chats: Chat[];
 
 	//timestamp
 	@CreateDateColumn()

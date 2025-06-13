@@ -21,11 +21,11 @@ export class Notification {
 	})
 	type: NotificationType;
 
-	@OneToOne(() => Invitation, { nullable: true })
+	@OneToOne(() => Invitation, { nullable: true, onDelete: 'CASCADE' })
 	@JoinColumn()
 	invitation?: Invitation;
 
-	@ManyToOne(() => User, (user) => user.notifications)
+	@ManyToOne(() => User, (user) => user.notifications, { onDelete: 'CASCADE' })
 	user: User;
 
 	@Column({ default: false })

@@ -15,14 +15,18 @@ import {
 import { User } from './user.entity';
 import { MessageAttachment } from './messageAttachment.entity';
 import { MessageReaction } from './messageReaction.entity';
+import { Chat } from './chat.entity';
 
 @Entity('messages')
 export class Message {
 	@PrimaryGeneratedColumn()
 	id: number;
 
-	@ManyToOne(() => User)
+	@ManyToOne(() => User, { onDelete: 'SET NULL' })
 	sender: User;
+
+	@ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'SET NULL' })
+	chat: Chat;
 
 	@Column({ default: '' })
 	content: string;
@@ -30,7 +34,7 @@ export class Message {
 	@OneToMany(() => MessageAttachment, (attachment) => attachment.message)
 	attachments: MessageAttachment[];
 
-	@OneToOne(() => Message, { nullable: true, onDelete: 'CASCADE' })
+	@OneToOne(() => Message, { nullable: true, onDelete: 'SET NULL' })
 	@JoinColumn()
 	replyTo?: Message;
 

@@ -18,10 +18,10 @@ export class MessageReaction {
 	@PrimaryGeneratedColumn()
 	id: number;
 
-	@ManyToOne(() => Message, (message) => message.reactions)
+	@ManyToOne(() => Message, (message) => message.reactions, { onDelete: 'CASCADE' })
 	message: Message;
 
-	@ManyToOne(() => User)
+	@ManyToOne(() => User, { onDelete: 'CASCADE' })
 	user: User;
 
 	@Column({
