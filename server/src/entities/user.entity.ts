@@ -8,18 +8,25 @@ export interface UserSettings {
 	preferLanguage: string;
 
 	notification: {
+		message: boolean;
+		reaction: boolean;
 		mention: boolean;
 		reply: boolean;
-		friend: boolean;
-		group: boolean;
+		friendRequest: boolean;
+		groupInvitation: boolean;
+		friendRequestReply: boolean;
+		groupInvitationReply: boolean;
 	};
 
 	notificationSound: {
 		message: boolean;
+		reaction: boolean;
 		mention: boolean;
 		reply: boolean;
-		friend: boolean;
-		group: boolean;
+		friendRequest: boolean;
+		groupInvitation: boolean;
+		friendRequestReply: boolean;
+		groupInvitationReply: boolean;
 	};
 }
 
@@ -74,18 +81,25 @@ export class User {
 			preferLanguage: 'en',
 
 			notification: {
+				message: true,
+				reaction: true,
 				mention: true,
 				reply: true,
-				friend: true,
-				group: true,
+				friendRequest: true,
+				groupInvitation: true,
+				friendRequestReply: true,
+				groupInvitationReply: true,
 			},
 
 			notificationSound: {
 				message: true,
+				reaction: true,
 				mention: true,
 				reply: true,
-				friend: true,
-				group: true,
+				friendRequest: true,
+				groupInvitation: true,
+				friendRequestReply: true,
+				groupInvitationReply: true,
 			},
 		},
 	})

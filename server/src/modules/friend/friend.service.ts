@@ -49,12 +49,14 @@ export class FriendService {
 		});
 		const savedInvitation = await this.invitationRepository.save(invitation);
 
+		if(to.settings.notification.friendRequest){
 		const notification = this.notificationRepository.create({
 			user: to,
 			type: NotificationType.INVITATION,
 			invitation: savedInvitation,
 		});
-		await this.notificationRepository.save(notification);
+			await this.notificationRepository.save(notification);
+		}
 		return savedInvitation;
 	}
 
@@ -101,12 +103,14 @@ export class FriendService {
 			invitation.status = InvitationStatus.REJECTED;
 		}
 
-		const notification = this.notificationRepository.create({
-			user: invitation.from,
-			type: NotificationType.INVITATION_REPLY,
-			invitation,
-		});
-		await this.notificationRepository.save(notification);
+		if (invitation.from.settings.notification.friendRequestReply) {
+			const notification = this.notificationRepository.create({
+				user: invitation.from,
+				type: NotificationType.INVITATION_REPLY,
+				invitation,
+			});
+			await this.notificationRepository.save(notification);
+		}
 
 		await this.invitationRepository.save(invitation);
 
