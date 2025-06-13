@@ -10,7 +10,7 @@ export enum InvitationType {
 export enum InvitationStatus {
 	PENDING = 'pending',
 	ACCEPTED = 'accepted',
-	DECLINED = 'declined',
+	REJECTED = 'rejected',
 	CANCELED = 'canceled',
 }
 

@@ -57,4 +57,91 @@ export class FriendService {
 		await this.notificationRepository.save(notification);
 		return savedInvitation;
 	}
+
+	async cancelInvitation({ userId, invitationId }: { userId: number; invitationId: number }) {
+		const invitation = await this.invitationRepository.findOne({
+			where: {
+				id: invitationId,
+				from: { id: userId },
+				status: InvitationStatus.PENDING,
+			},
+		});
+
+		if (!invitation) {
+			throw new BadRequestException('Invitation not found');
+		}
+
+		invitation.status = InvitationStatus.CANCELED;
+		await this.invitationRepository.save(invitation);
+
+		return invitation;
+	}
+
+	async replyInvitation({ userId, invitationId, accepted }: { userId: number; invitationId: number; accepted: boolean }) {
+		const invitation = await this.invitationRepository.findOne({
+			where: {
+				id: invitationId,
+				to: { id: userId },
+				status: InvitationStatus.PENDING,
+			},
+		});
+
+		if (!invitation) {
+			throw new BadRequestException('Invitation not found');
+		}
+
+		if (accepted) {
+			invitation.status = InvitationStatus.ACCEPTED;
+
+			invitation.from.friendList.push(invitation.to);
+			invitation.to.friendList.push(invitation.from);
+			await this.userRepository.save(invitation.from);
+			await this.userRepository.save(invitation.to);
+		} else {
+			invitation.status = InvitationStatus.REJECTED;
+		}
+
+		const notification = this.notificationRepository.create({
+			user: invitation.from,
+			type: NotificationType.INVITATION_REPLY,
+			invitation,
+		});
+		await this.notificationRepository.save(notification);
+
+		await this.invitationRepository.save(invitation);
+
+		return invitation;
+	}
+
+	async blockUser({ userId, blockedUserId }: { userId: number; blockedUserId: number }) {
+		const user = await this.userService.findById(userId);
+		const blockedUser = await this.userService.findById(blockedUserId);
+
+		if (!blockedUser) {
+			throw new BadRequestException('User not found');
+		}
+
+		if (user!.blockedList.some((user) => user.id === blockedUserId)) {
+			throw new BadRequestException('User already blocked');
+		}
+
+		user!.blockedList.push(blockedUser);
+		await this.userRepository.save(user!);
+
+		return user;
+	}
+
+	async unblockUser({ userId, blockedUserId }: { userId: number; blockedUserId: number }) {
+		const user = await this.userService.findById(userId);
+		const blockedUser = await this.userService.findById(blockedUserId);
+
+		if (!blockedUser) {
+			throw new BadRequestException('User not found');
+		}
+
+		user!.blockedList = user!.blockedList.filter((user) => user.id !== blockedUserId);
+		await this.userRepository.save(user!);
+
+		return user;
+	}
 }
