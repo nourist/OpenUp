@@ -1,0 +1,60 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { User } from 'src/entities/user.entity';
+import { Notification, NotificationType } from 'src/entities/notification.entity';
+import { Invitation, InvitationStatus, InvitationType } from 'src/entities/invitation.entity';
+import { UserService } from '../user/user.service';
+
+@Injectable()
+export class FriendService {
+	constructor(
+		@InjectRepository(User)
+		private readonly userRepository: Repository<User>,
+		@InjectRepository(Notification)
+		private readonly notificationRepository: Repository<Notification>,
+		@InjectRepository(Invitation)
+		private readonly invitationRepository: Repository<Invitation>,
+		private readonly userService: UserService,
+	) {}
+
+	async inviteFriend({ from: fromId, to: toId, body }: { from: number; to: number; body?: string }) {
+		const to = await this.userService.findById(toId);
+		const from = await this.userService.findById(fromId);
+
+		if (!to) {
+			throw new BadRequestException('User not found');
+		}
+
+		if (toId === fromId) {
+			throw new BadRequestException('You cannot invite yourself');
+		}
+
+		const alreadyInvited = from?.invitations.some((invitation) => invitation.to.id === toId && invitation.status === InvitationStatus.PENDING);
+		if (alreadyInvited) {
+			throw new BadRequestException('Already invited');
+		}
+
+		const isBlocked = to?.blockedList.some((user) => user.id === fromId);
+		if (isBlocked) {
+			throw new BadRequestException('You have been blocked by this user');
+		}
+
+		const invitation = this.invitationRepository.create({
+			from: { id: fromId },
+			to,
+			type: InvitationType.FRIEND,
+			body,
+		});
+		const savedInvitation = await this.invitationRepository.save(invitation);
+
+		const notification = this.notificationRepository.create({
+			user: to,
+			type: NotificationType.INVITATION,
+			invitation: savedInvitation,
+		});
+		await this.notificationRepository.save(notification);
+		return savedInvitation;
+	}
+}

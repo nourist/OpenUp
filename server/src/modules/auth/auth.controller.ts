@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
+import { instanceToPlain } from 'class-transformer';
 
 import { AuthService } from './auth.service';
 import { SigninDto, SignupDto } from './auth.dto';
@@ -7,9 +8,9 @@ import { LocalAuthGuard } from 'src/guards/local-auth.guard';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { UserService } from '../user/user.service';
 import { GetUser } from 'src/decorators/get-user.decorator';
-import { JwtPayload } from 'src/types/jwt-payload.interface';
 import { GoogleAuthGuard } from 'src/guards/google-auth.guard';
 import { User } from 'src/entities/user.entity';
+import { JwtPayload } from 'src/types/jwt-payload.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -23,7 +24,7 @@ export class AuthController {
 	async getProfile(@GetUser() user: JwtPayload) {
 		return {
 			message: 'Get user profile successfully',
-			user: await this.userService.findByEmail(user.email),
+			user: instanceToPlain(await this.userService.findByEmail(user.email)),
 		};
 	}
 
@@ -40,7 +41,7 @@ export class AuthController {
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		});
 
-		return { message: 'Signup successful', user };
+		return { message: 'Signup successful', user: instanceToPlain(user) };
 	}
 
 	@Post('signin')
@@ -55,7 +56,7 @@ export class AuthController {
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		});
 
-		return { message: 'Signin successful', user };
+		return { message: 'Signin successful', user: instanceToPlain(user) };
 	}
 
 	@Post('google-signin')
@@ -70,7 +71,7 @@ export class AuthController {
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		});
 
-		return { message: 'Signin successful', user };
+		return { message: 'Signin successful', user: instanceToPlain(user) };
 	}
 
 	@Post('signout')

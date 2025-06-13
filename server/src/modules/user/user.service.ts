@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 
 import { User } from '../../entities/user.entity';
 
+const userRelations = ['friendList', 'blockedList', 'blockedBy', 'notifications', 'notifications.invitation', 'notifications.invitation.from', 'invitations', 'invitations.to'];
+
 @Injectable()
 export class UserService {
 	constructor(
@@ -12,6 +14,16 @@ export class UserService {
 	) {}
 
 	findByEmail(email: string) {
-		return this.userRepository.findOne({ where: { email } });
+		return this.userRepository.findOne({
+			where: { email },
+			relations: userRelations,
+		});
+	}
+
+	async findById(id: number) {
+		return this.userRepository.findOne({
+			where: { id },
+			relations: userRelations,
+		});
 	}
 }
