@@ -8,6 +8,7 @@ import { CircleAlert } from 'lucide-react';
 import useAuthStore from '~/stores/authStore';
 import { signup } from '~/services/auth';
 import AbstractGradientShape from '~/components/AbstractGradientShape';
+import Tooltip from '~/components/Tooltip';
 
 const Signup = () => {
 	const { t } = useTranslation('auth');
@@ -62,8 +63,17 @@ const Signup = () => {
 						placeholder={t('password')}
 					/>
 					<div data-hide={!fieldErrors.password} className="text-xs text-error mb-1 mt-0.5 flex items-center gap-1 font-medium h-4 data-[hide=true]:opacity-0">
-						<CircleAlert size={12} strokeWidth={2.5} />
-						{fieldErrors.password?.capitalize()}
+						{fieldErrors.password === 'password is not strong enough' ? (
+							<Tooltip className="gap-1" component="span" content={t('strong-password-message').capitalize()}>
+								<CircleAlert size={12} strokeWidth={2.5} />
+								{fieldErrors.password?.capitalize()}
+							</Tooltip>
+						) : (
+							<>
+								<CircleAlert size={12} strokeWidth={2.5} />
+								{fieldErrors.password?.capitalize()}
+							</>
+						)}
 					</div>
 
 					<label htmlFor="name" className="text-sm font-semibold capitalize">
