@@ -37,7 +37,7 @@ export class Chat {
 
 	@OneToOne(() => Message, { nullable: true, onDelete: 'SET NULL' })
 	@JoinColumn()
-	lastMessage: Message;
+	lastMessage?: Message;
 
 	@Column({ type: 'jsonb', nullable: true })
 	settings?: ChatSettings;

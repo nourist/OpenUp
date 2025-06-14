@@ -19,8 +19,14 @@ export class ChatParticipant {
 	@ManyToOne(() => Chat, (chat) => chat.participants, { onDelete: 'CASCADE' })
 	chat: Chat;
 
-	@Column({ type: 'jsonb', nullable: true })
-	settings?: ChatParticipantSettings;
+	@Column({
+		type: 'jsonb',
+		default: {
+			muted: false,
+			pinned: false,
+		},
+	})
+	settings: ChatParticipantSettings;
 
 	@Column({ default: false })
 	isOwner: boolean;

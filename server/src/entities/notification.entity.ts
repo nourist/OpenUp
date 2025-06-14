@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 
 import { User } from './user.entity';
 import { Invitation } from './invitation.entity';
@@ -21,8 +21,7 @@ export class Notification {
 	})
 	type: NotificationType;
 
-	@OneToOne(() => Invitation, { nullable: true, onDelete: 'CASCADE' })
-	@JoinColumn()
+	@ManyToOne(() => Invitation, { nullable: true, onDelete: 'CASCADE' })
 	invitation?: Invitation;
 
 	@ManyToOne(() => User, (user) => user.notifications, { onDelete: 'CASCADE' })

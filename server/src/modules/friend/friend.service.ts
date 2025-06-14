@@ -7,6 +7,7 @@ import { NotificationType } from 'src/entities/notification.entity';
 import { Invitation, InvitationStatus, InvitationType } from 'src/entities/invitation.entity';
 import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
+import { ChatService } from '../chat/chat.service';
 
 @Injectable()
 export class FriendService {
@@ -17,6 +18,7 @@ export class FriendService {
 		private readonly invitationRepository: Repository<Invitation>,
 		private readonly userService: UserService,
 		private readonly notificationService: NotificationService,
+		private readonly chatService: ChatService,
 	) {}
 
 	isInvited(from: User, to: User) /*please make sure that user have invitation relations*/ {
@@ -55,7 +57,7 @@ export class FriendService {
 			throw new BadRequestException('Already invited');
 		}
 
-		if (this.isBlocked(from, to)) {
+		if (this.isBlocked(to, from)) {
 			throw new BadRequestException('You have been blocked by this user');
 		}
 
@@ -116,6 +118,7 @@ export class FriendService {
 			invitation.status = InvitationStatus.ACCEPTED;
 
 			await this.makeFriend(invitation.from, invitation.to);
+			await this.chatService.createDirectChat(invitation.from, invitation.to);
 		} else {
 			invitation.status = InvitationStatus.REJECTED;
 		}
