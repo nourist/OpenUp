@@ -1,10 +1,21 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { User } from './user.entity';
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+
 import { Message } from './message.entity';
+import { ChatParticipant } from './chatParticipants.entity';
 
 export enum ChatType {
 	GROUP = 'group',
 	DIRECT = 'direct',
+}
+
+export interface ChatSettings {
+	allowInviteLink: boolean;
+	inviteLink: string;
+	inviteLinkExpiresAt: Date;
+
+	onlyAdminsCanPost: boolean;
+	allowMemberAddOthers: boolean;
+	allowMemberChangeInfo: boolean;
 }
 
 @Entity('chats')
@@ -18,17 +29,8 @@ export class Chat {
 	})
 	type: ChatType;
 
-	@ManyToMany(() => User)
-	@JoinTable()
-	mutedBy: User[];
-
-	@ManyToMany(() => User)
-	@JoinTable()
-	pinnedBy: User[];
-
-	@ManyToMany(() => User, (user) => user.chats)
-	@JoinTable()
-	participants: User[];
+	@OneToMany(() => ChatParticipant, (participant) => participant.chat)
+	participants: ChatParticipant[];
 
 	@OneToMany(() => Message, (message) => message.chat)
 	messages: Message[];
@@ -37,7 +39,9 @@ export class Chat {
 	@JoinColumn()
 	lastMessage: Message;
 
-	//timestamp
+	@Column({ type: 'jsonb', nullable: true })
+	settings?: ChatSettings;
+
 	@CreateDateColumn()
 	createdAt: Date;
 

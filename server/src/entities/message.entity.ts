@@ -12,6 +12,7 @@ import {
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from 'typeorm';
+
 import { User } from './user.entity';
 import { MessageAttachment } from './messageAttachment.entity';
 import { MessageReaction } from './messageReaction.entity';

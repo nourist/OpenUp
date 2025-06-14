@@ -5,4 +5,3 @@ todo:
 - refactor user services
 - find user
 - find user with relations
-- group chat type entity
