@@ -19,9 +19,6 @@ export class AuthService {
 
 	async validateUser(email: string, password: string) {
 		const user = await this.userService.findByEmail(email, true);
-		if (!user) {
-			throw new UnauthorizedException('User not found');
-		}
 
 		if (!user.password) {
 			throw new UnauthorizedException("User doesn't have a password");
@@ -48,7 +45,7 @@ export class AuthService {
 
 	async signin(userData: Partial<User>) {
 		const user = await this.userService.findByEmail(userData.email!, true);
-		const payload: JwtPayload = { email: user!.email, sub: user!.id };
+		const payload: JwtPayload = { email: user.email, sub: user.id };
 		return {
 			access_token: this.jwtService.sign(payload),
 			user,
