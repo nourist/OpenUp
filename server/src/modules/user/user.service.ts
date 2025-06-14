@@ -4,7 +4,24 @@ import { Repository } from 'typeorm';
 
 import { User } from '../../entities/user.entity';
 
-const userRelations = ['friendList', 'blockedList', 'blockedBy', 'notifications', 'notifications.invitation', 'notifications.invitation.from', 'invitations', 'invitations.to'];
+type UserRelation = 'friendList' | 'blockedList' | 'blockedBy' | 'notifications' | 'notifications.invitation' | 'notifications.invitation.from' | 'invitations' | 'invitations.to';
+const userRelations: UserRelation[] = [
+	'friendList',
+	'blockedList',
+	'blockedBy',
+	'notifications',
+	'notifications.invitation',
+	'notifications.invitation.from',
+	'invitations',
+	'invitations.to',
+];
+
+const getUserRelations = (relations: boolean | UserRelation[]): UserRelation[] => {
+	if (typeof relations === 'boolean') {
+		return relations ? userRelations : [];
+	}
+	return relations;
+};
 
 @Injectable()
 export class UserService {
@@ -13,17 +30,18 @@ export class UserService {
 		private readonly userRepository: Repository<User>,
 	) {}
 
-	findByEmail(email: string) {
+	findByEmail(email: string, relations: boolean | UserRelation[] = false) {
+		//false: no relations, true: all relations, array: specific relations
 		return this.userRepository.findOne({
 			where: { email },
-			relations: userRelations,
+			relations: getUserRelations(relations),
 		});
 	}
 
-	async findById(id: number) {
+	async findById(id: number, relations: boolean | UserRelation[] = false) {
 		return this.userRepository.findOne({
 			where: { id },
-			relations: userRelations,
+			relations: getUserRelations(relations),
 		});
 	}
 }

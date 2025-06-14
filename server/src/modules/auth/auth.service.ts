@@ -18,7 +18,7 @@ export class AuthService {
 	) {}
 
 	async validateUser(email: string, password: string) {
-		const user = await this.userService.findByEmail(email);
+		const user = await this.userService.findByEmail(email, true);
 		if (!user) {
 			throw new UnauthorizedException('User not found');
 		}
@@ -36,7 +36,7 @@ export class AuthService {
 	}
 
 	async signup(userData: Partial<User>) {
-		const isUserExists = await this.userService.findByEmail(userData.email!);
+		const isUserExists = await this.userService.findByEmail(userData.email!, true);
 		if (isUserExists) {
 			throw new BadRequestException('User already exists');
 		}
@@ -47,7 +47,7 @@ export class AuthService {
 	}
 
 	async signin(userData: Partial<User>) {
-		const user = await this.userService.findByEmail(userData.email!);
+		const user = await this.userService.findByEmail(userData.email!, true);
 		const payload: JwtPayload = { email: user!.email, sub: user!.id };
 		return {
 			access_token: this.jwtService.sign(payload),

@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { FriendModule } from './modules/friend/friend.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
 	imports: [
@@ -28,6 +29,7 @@ import { FriendModule } from './modules/friend/friend.module';
 		AuthModule,
 		UserModule,
 		FriendModule,
+		ChatModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

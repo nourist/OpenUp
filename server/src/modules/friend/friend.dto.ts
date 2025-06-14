@@ -37,3 +37,9 @@ export class UnblockUserDto {
 	@IsNumber()
 	blockedUserId: number;
 }
+
+export class UnfriendDto {
+	@IsNotEmpty()
+	@IsNumber()
+	friendId: number;
+}

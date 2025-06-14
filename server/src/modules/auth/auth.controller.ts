@@ -11,6 +11,7 @@ import { GetUser } from 'src/decorators/get-user.decorator';
 import { GoogleAuthGuard } from 'src/guards/google-auth.guard';
 import { User } from 'src/entities/user.entity';
 import { JwtPayload } from 'src/types/jwt-payload.interface';
+import { setAuthCookie, clearAuthCookie } from 'src/utils/authCookie';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +25,7 @@ export class AuthController {
 	async getProfile(@GetUser() user: JwtPayload) {
 		return {
 			message: 'Get user profile successfully',
-			user: instanceToPlain(await this.userService.findByEmail(user.email)),
+			user: instanceToPlain(await this.userService.findByEmail(user.email, true)),
 		};
 	}
 
@@ -32,16 +33,11 @@ export class AuthController {
 	async signup(@Body() userData: SignupDto, @Res({ passthrough: true }) res: Response) {
 		const user = await this.authService.signup(userData);
 
-		const { access_token } = await this.authService.signin(user);
+		const { access_token, user: signedInUser } = await this.authService.signin(user);
 
-		res.cookie('access_token', access_token, {
-			httpOnly: true,
-			sameSite: 'strict',
-			secure: process.env.NODE_ENV === 'production',
-			maxAge: 7 * 24 * 60 * 60 * 1000,
-		});
+		setAuthCookie(res, access_token);
 
-		return { message: 'Signup successful', user: instanceToPlain(user) };
+		return { message: 'Signup successful', user: instanceToPlain(signedInUser) };
 	}
 
 	@Post('signin')
@@ -49,12 +45,7 @@ export class AuthController {
 	async signin(@Body() signinInfo: SigninDto, @Res({ passthrough: true }) res: Response) {
 		const { access_token, user } = await this.authService.signin(signinInfo);
 
-		res.cookie('access_token', access_token, {
-			httpOnly: true,
-			sameSite: 'strict',
-			secure: process.env.NODE_ENV === 'production',
-			maxAge: 7 * 24 * 60 * 60 * 1000,
-		});
+		setAuthCookie(res, access_token);
 
 		return { message: 'Signin successful', user: instanceToPlain(user) };
 	}
@@ -64,19 +55,14 @@ export class AuthController {
 	async googleSignin(@GetUser() userInfo: User, @Res({ passthrough: true }) res: Response) {
 		const { access_token, user } = await this.authService.signin(userInfo);
 
-		res.cookie('access_token', access_token, {
-			httpOnly: true,
-			sameSite: 'strict',
-			secure: process.env.NODE_ENV === 'production',
-			maxAge: 7 * 24 * 60 * 60 * 1000,
-		});
+		setAuthCookie(res, access_token);
 
 		return { message: 'Signin successful', user: instanceToPlain(user) };
 	}
 
 	@Post('signout')
 	signout(@Res({ passthrough: true }) res: Response) {
-		res.clearCookie('access_token');
+		clearAuthCookie(res);
 
 		return { message: 'Signout successful' };
 	}

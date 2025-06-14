@@ -20,8 +20,8 @@ export class FriendService {
 	) {}
 
 	async inviteFriend({ from: fromId, to: toId, body }: { from: number; to: number; body?: string }) {
-		const to = await this.userService.findById(toId);
-		const from = await this.userService.findById(fromId);
+		const to = await this.userService.findById(toId, ['blockedList']);
+		const from = await this.userService.findById(fromId, ['invitations', 'invitations.to']);
 
 		if (!to) {
 			throw new BadRequestException('User not found');
@@ -73,6 +73,10 @@ export class FriendService {
 			throw new BadRequestException('Invitation not found');
 		}
 
+		if (invitation.status !== InvitationStatus.PENDING) {
+			throw new BadRequestException('Invitation not pending');
+		}
+
 		invitation.status = InvitationStatus.CANCELED;
 		await this.invitationRepository.save(invitation);
 
@@ -86,6 +90,7 @@ export class FriendService {
 				to: { id: userId },
 				status: InvitationStatus.PENDING,
 			},
+			relations: ['from', 'to', 'from.friendList', 'to.friendList', 'from.notifications'],
 		});
 
 		if (!invitation) {
@@ -95,10 +100,15 @@ export class FriendService {
 		if (accepted) {
 			invitation.status = InvitationStatus.ACCEPTED;
 
-			invitation.from.friendList.push(invitation.to);
-			invitation.to.friendList.push(invitation.from);
-			await this.userRepository.save(invitation.from);
-			await this.userRepository.save(invitation.to);
+			const from = await this.userService.findById(invitation.from.id, true);
+			const to = await this.userService.findById(invitation.to.id, true);
+
+			if (from && to && !from.friendList.some((u) => u.id === to.id)) {
+				await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(from.id).add(to.id);
+			}
+			if (to && from && !to.friendList.some((u) => u.id === from.id)) {
+				await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(to.id).add(from.id);
+			}
 		} else {
 			invitation.status = InvitationStatus.REJECTED;
 		}
@@ -117,8 +127,29 @@ export class FriendService {
 		return invitation;
 	}
 
+	async unfriend({ userId, friendId }: { userId: number; friendId: number }) {
+		const user = await this.userService.findById(userId, true);
+		const friend = await this.userService.findById(friendId, true);
+
+		if (!user || !friend) {
+			throw new BadRequestException('User not found');
+		}
+
+		if (!user.friendList.some((u) => u.id === friendId)) {
+			throw new BadRequestException('This user is not in your friend list');
+		}
+		if (!friend.friendList.some((u) => u.id === userId)) {
+			throw new BadRequestException('This user is not in your friend list');
+		}
+
+		await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(userId).remove(friendId);
+		await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(friendId).remove(userId);
+
+		return user;
+	}
+
 	async blockUser({ userId, blockedUserId }: { userId: number; blockedUserId: number }) {
-		const user = await this.userService.findById(userId);
+		const user = await this.userService.findById(userId, true);
 		const blockedUser = await this.userService.findById(blockedUserId);
 
 		if (!blockedUser) {
@@ -136,7 +167,7 @@ export class FriendService {
 	}
 
 	async unblockUser({ userId, blockedUserId }: { userId: number; blockedUserId: number }) {
-		const user = await this.userService.findById(userId);
+		const user = await this.userService.findById(userId, true);
 		const blockedUser = await this.userService.findById(blockedUserId);
 
 		if (!blockedUser) {

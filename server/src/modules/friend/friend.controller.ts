@@ -3,7 +3,7 @@ import { instanceToPlain } from 'class-transformer';
 
 import { FriendService } from './friend.service';
 import { GetUser } from 'src/decorators/get-user.decorator';
-import { BlockUserDto, CancelInvitationDto, InviteFriendDto, ReplyInvitationDto, UnblockUserDto } from './friend.dto';
+import { BlockUserDto, CancelInvitationDto, InviteFriendDto, ReplyInvitationDto, UnblockUserDto, UnfriendDto } from './friend.dto';
 import { JwtPayload } from 'src/types/jwt-payload.interface';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
@@ -38,12 +38,21 @@ export class FriendController {
 		};
 	}
 
+	@Post('/unfriend')
+	@UseGuards(JwtAuthGuard)
+	async unfriend(@GetUser() user: JwtPayload, @Body() body: UnfriendDto) {
+		return {
+			message: 'Unfriended',
+			user: instanceToPlain(await this.friendService.unfriend({ ...body, userId: user.sub })),
+		};
+	}
+
 	@Post('/block')
 	@UseGuards(JwtAuthGuard)
 	async blockUser(@GetUser() user: JwtPayload, @Body() body: BlockUserDto) {
 		return {
 			message: 'User blocked',
-			data: instanceToPlain(await this.friendService.blockUser({ ...body, userId: user.sub })),
+			user: instanceToPlain(await this.friendService.blockUser({ ...body, userId: user.sub })),
 		};
 	}
 
@@ -52,7 +61,7 @@ export class FriendController {
 	async unblockUser(@GetUser() user: JwtPayload, @Body() body: UnblockUserDto) {
 		return {
 			message: 'User unblocked',
-			data: instanceToPlain(await this.friendService.unblockUser({ ...body, userId: user.sub })),
+			user: instanceToPlain(await this.friendService.unblockUser({ ...body, userId: user.sub })),
 		};
 	}
 }
