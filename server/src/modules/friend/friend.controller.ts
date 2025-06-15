@@ -1,9 +1,9 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { instanceToPlain } from 'class-transformer';
 
 import { FriendService } from './friend.service';
 import { GetUser } from 'src/decorators/get-user.decorator';
-import { BlockUserDto, CancelInvitationDto, InviteFriendDto, ReplyInvitationDto, UnblockUserDto, UnfriendDto } from './friend.dto';
+import { InviteFriendDto } from './friend.dto';
 import { JwtPayload } from 'src/types/jwt-payload.interface';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
@@ -11,57 +11,66 @@ import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 export class FriendController {
 	constructor(private readonly friendService: FriendService) {}
 
-	@Post('/invite')
+	@Post('/invite/:to')
 	@UseGuards(JwtAuthGuard)
-	async inviteFriend(@GetUser() user: JwtPayload, @Body() body: InviteFriendDto) {
+	async inviteFriend(@GetUser() user: JwtPayload, @Param('to', ParseIntPipe) to: number, @Body() body: InviteFriendDto) {
 		return {
 			message: 'Invitation sent',
-			data: instanceToPlain(await this.friendService.inviteFriend({ ...body, from: user.sub })),
+			data: instanceToPlain(await this.friendService.inviteFriend({ to, from: user.sub, body: body?.body })),
 		};
 	}
 
-	@Post('/invite/cancel')
+	@Delete('/invite/:invitationId')
 	@UseGuards(JwtAuthGuard)
-	async cancelInvitation(@GetUser() user: JwtPayload, @Body() body: CancelInvitationDto) {
+	async cancelInvitation(@GetUser() user: JwtPayload, @Param('invitationId', ParseIntPipe) invitationId: number) {
 		return {
 			message: 'Invitation canceled',
-			data: instanceToPlain(await this.friendService.cancelInvitation({ ...body, userId: user.sub })),
+			data: instanceToPlain(await this.friendService.cancelInvitation({ invitationId, userId: user.sub })),
 		};
 	}
 
-	@Post('/invite/reply')
+	@Patch('/invite/:invitationId/accepted')
 	@UseGuards(JwtAuthGuard)
-	async replyInvitation(@GetUser() user: JwtPayload, @Body() body: ReplyInvitationDto) {
+	async acceptInvitation(@GetUser() user: JwtPayload, @Param('invitationId', ParseIntPipe) invitationId: number) {
 		return {
-			message: 'Invitation replied',
-			data: instanceToPlain(await this.friendService.replyInvitation({ ...body, userId: user.sub })),
+			message: 'Invitation accepted',
+			data: instanceToPlain(await this.friendService.replyInvitation({ invitationId, accepted: true, userId: user.sub })),
 		};
 	}
 
-	@Post('/unfriend')
+	@Patch('/invite/:invitationId/rejected')
 	@UseGuards(JwtAuthGuard)
-	async unfriend(@GetUser() user: JwtPayload, @Body() body: UnfriendDto) {
+	async rejectInvitation(@GetUser() user: JwtPayload, @Param('invitationId', ParseIntPipe) invitationId: number) {
+		return {
+			message: 'Invitation rejected',
+			data: instanceToPlain(await this.friendService.replyInvitation({ invitationId, accepted: false, userId: user.sub })),
+		};
+	}
+
+	@Delete('/unfriend/:friendId')
+	@UseGuards(JwtAuthGuard)
+	async unfriend(@GetUser() user: JwtPayload, @Param('friendId', ParseIntPipe) friendId: number) {
 		return {
 			message: 'Unfriended',
-			user: instanceToPlain(await this.friendService.unfriend({ ...body, userId: user.sub })),
+			user: instanceToPlain(await this.friendService.unfriend({ friendId, userId: user.sub })),
 		};
 	}
 
-	@Post('/block')
+	@Patch('/block/:blockedUserId')
 	@UseGuards(JwtAuthGuard)
-	async blockUser(@GetUser() user: JwtPayload, @Body() body: BlockUserDto) {
+	async blockUser(@GetUser() user: JwtPayload, @Param('blockedUserId', ParseIntPipe) blockedUserId: number) {
 		return {
 			message: 'User blocked',
-			user: instanceToPlain(await this.friendService.blockUser({ ...body, userId: user.sub })),
+			user: instanceToPlain(await this.friendService.blockUser({ blockedUserId, userId: user.sub })),
 		};
 	}
 
-	@Post('/unblock')
+	@Patch('/unblock/:blockedUserId')
 	@UseGuards(JwtAuthGuard)
-	async unblockUser(@GetUser() user: JwtPayload, @Body() body: UnblockUserDto) {
+	async unblockUser(@GetUser() user: JwtPayload, @Param('blockedUserId', ParseIntPipe) blockedUserId: number) {
 		return {
 			message: 'User unblocked',
-			user: instanceToPlain(await this.friendService.unblockUser({ ...body, userId: user.sub })),
+			user: instanceToPlain(await this.friendService.unblockUser({ blockedUserId, userId: user.sub })),
 		};
 	}
 }

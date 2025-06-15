@@ -18,6 +18,7 @@ async function bootstrap() {
 	app.use(cookieParser());
 	app.useGlobalPipes(
 		new ValidationPipe({
+			transform: true,
 			exceptionFactory: (validationErrors: ValidationError[] = []) => {
 				return new UnprocessableEntityException({
 					statusCode: 422,
