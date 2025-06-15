@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { FriendModule } from './modules/friend/friend.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { GroupModule } from './modules/group/group.module';
 
 @Module({
 	imports: [
@@ -32,6 +33,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 		FriendModule,
 		ChatModule,
 		NotificationModule,
+		GroupModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

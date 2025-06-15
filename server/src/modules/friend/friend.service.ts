@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -11,6 +11,8 @@ import { ChatService } from '../chat/chat.service';
 
 @Injectable()
 export class FriendService {
+	private readonly logger: Logger = new Logger(FriendService.name);
+
 	constructor(
 		@InjectRepository(User)
 		private readonly userRepository: Repository<User>,
@@ -43,21 +45,30 @@ export class FriendService {
 		if (!this.isFriend(to, from)) {
 			await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(to.id).add(from.id);
 		}
+		this.logger.log(`User ${from.id} is now friends with user ${to.id}`);
 	}
 
 	async inviteFriend({ from: fromId, to: toId, body }: { from: number; to: number; body?: string }) {
 		const to = await this.userService.findById(toId, ['blockedList']);
-		const from = await this.userService.findById(fromId, ['invitations', 'invitations.to']);
+		const from = await this.userService.findById(fromId, ['invitations', 'invitations.to', 'friendList']);
+
+		if (this.isFriend(from, to)) {
+			this.logger.log(`User ${from.id} is already friends with user ${to.id}`);
+			throw new BadRequestException('You are already friends');
+		}
 
 		if (toId === fromId) {
+			this.logger.log(`User ${from.id} cannot invite yourself`);
 			throw new BadRequestException('You cannot invite yourself');
 		}
 
 		if (this.isInvited(from, to)) {
+			this.logger.log(`User ${from.id} is already invited to user ${to.id}`);
 			throw new BadRequestException('Already invited');
 		}
 
 		if (this.isBlocked(to, from)) {
+			this.logger.log(`User ${from.id} has been blocked by user ${to.id}`);
 			throw new BadRequestException('You have been blocked by this user');
 		}
 
@@ -69,6 +80,7 @@ export class FriendService {
 		});
 		const savedInvitation = await this.invitationRepository.save(invitation);
 
+		this.logger.log(`Invitation created: ${savedInvitation.id}`);
 		await this.notificationService.createNotification(
 			to,
 			{
@@ -91,11 +103,14 @@ export class FriendService {
 		});
 
 		if (!invitation) {
+			this.logger.log(`Invitation not found for user ${userId} and invitation ${invitationId}`);
 			throw new BadRequestException('Invitation not found');
 		}
 
 		invitation.status = InvitationStatus.CANCELED;
 		await this.invitationRepository.save(invitation);
+
+		this.logger.log(`Invitation ${invitationId} canceled for user ${userId}`);
 
 		return invitation;
 	}
@@ -111,16 +126,19 @@ export class FriendService {
 		});
 
 		if (!invitation) {
+			this.logger.log(`Invitation not found for user ${userId} and invitation ${invitationId}`);
 			throw new BadRequestException('Invitation not found');
 		}
 
 		if (accepted) {
 			invitation.status = InvitationStatus.ACCEPTED;
+			this.logger.log(`Invitation ${invitationId} accepted for user ${userId}`);
 
 			await this.makeFriend(invitation.from, invitation.to);
 			await this.chatService.createDirectChat(invitation.from, invitation.to);
 		} else {
 			invitation.status = InvitationStatus.REJECTED;
+			this.logger.log(`Invitation ${invitationId} rejected for user ${userId}`);
 		}
 
 		await this.notificationService.createNotification(
@@ -144,9 +162,10 @@ export class FriendService {
 		if (this.isFriend(user, friend)) {
 			await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(userId).remove(friendId);
 			await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(friendId).remove(userId);
+			this.logger.log(`User ${userId} is now unfriends with user ${friendId}`);
 		}
 
-		return user;
+		return await this.userService.findById(userId, true);
 	}
 
 	async blockUser({ userId, blockedUserId }: { userId: number; blockedUserId: number }) {
@@ -154,6 +173,7 @@ export class FriendService {
 		const blockedUser = await this.userService.findById(blockedUserId);
 
 		if (this.isBlocked(user, blockedUser)) {
+			this.logger.log(`User ${userId} is already blocked by user ${blockedUserId}`);
 			throw new BadRequestException('User already blocked');
 		}
 
@@ -169,6 +189,8 @@ export class FriendService {
 
 		user.blockedList = user.blockedList.filter((user) => user.id !== blockedUserId);
 		await this.userRepository.save(user);
+
+		this.logger.log(`User ${userId} is now unblocked user ${blockedUserId}`);
 
 		return user;
 	}

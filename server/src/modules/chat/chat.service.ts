@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -9,6 +9,8 @@ import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ChatService {
+	private readonly logger: Logger = new Logger(ChatService.name);
+
 	constructor(
 		@InjectRepository(Chat)
 		private readonly chatRepository: Repository<Chat>,
@@ -30,12 +32,15 @@ export class ChatService {
 			.having('COUNT(DISTINCT user.id) = 2')
 			.getOne();
 
+		this.logger.log(`Direct chat found: ${chat?.id}`);
+
 		return chat;
 	}
 
 	async createDirectChat(user1: User, user2: User) {
 		const existingChat = await this.findDirectChat(user1, user2);
 		if (existingChat) {
+			this.logger.log(`Direct chat already exists returning: ${existingChat.id}`);
 			return existingChat;
 		}
 
@@ -43,11 +48,15 @@ export class ChatService {
 			user: user1,
 		});
 
+		this.logger.log(`Participant 1 created: ${participant1.id}`);
+
 		await this.chatParticipantRepository.save(participant1);
 
 		const participant2 = this.chatParticipantRepository.create({
 			user: user2,
 		});
+
+		this.logger.log(`Participant 2 created: ${participant2.id}`);
 
 		await this.chatParticipantRepository.save(participant2);
 
@@ -55,6 +64,8 @@ export class ChatService {
 			type: ChatType.DIRECT,
 			participants: [participant1, participant2],
 		});
+
+		this.logger.log(`Chat created for user ${user1.id} and user ${user2.id}: ${chat.id}`);
 
 		return this.chatRepository.save(chat);
 	}

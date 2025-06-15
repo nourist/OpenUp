@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -41,6 +41,8 @@ const getUserRelations = (relations: boolean | UserRelation[]): UserRelation[] =
 
 @Injectable()
 export class UserService {
+	private readonly logger: Logger = new Logger(UserService.name);
+
 	constructor(
 		@InjectRepository(User)
 		private readonly userRepository: Repository<User>,
@@ -53,6 +55,7 @@ export class UserService {
 			relations: getUserRelations(relations),
 		});
 		if (!user) {
+			this.logger.log(`User not found for email ${email}`);
 			throw new BadRequestException('User not found');
 		}
 		return user;
@@ -64,6 +67,7 @@ export class UserService {
 			relations: getUserRelations(relations),
 		});
 		if (!user) {
+			this.logger.log(`User not found for id ${id}`);
 			throw new BadRequestException('User not found');
 		}
 		return user;
