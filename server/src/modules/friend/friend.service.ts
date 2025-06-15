@@ -93,28 +93,6 @@ export class FriendService {
 		return savedInvitation;
 	}
 
-	async cancelInvitation({ userId, invitationId }: { userId: number; invitationId: number }) {
-		const invitation = await this.invitationRepository.findOne({
-			where: {
-				id: invitationId,
-				from: { id: userId },
-				status: InvitationStatus.PENDING,
-			},
-		});
-
-		if (!invitation) {
-			this.logger.log(`Invitation not found for user ${userId} and invitation ${invitationId}`);
-			throw new BadRequestException('Invitation not found');
-		}
-
-		invitation.status = InvitationStatus.CANCELED;
-		await this.invitationRepository.save(invitation);
-
-		this.logger.log(`Invitation ${invitationId} canceled for user ${userId}`);
-
-		return invitation;
-	}
-
 	async replyInvitation({ userId, invitationId, accepted }: { userId: number; invitationId: number; accepted: boolean }) {
 		const invitation = await this.invitationRepository.findOne({
 			where: {

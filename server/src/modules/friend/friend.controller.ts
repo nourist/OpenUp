@@ -6,17 +6,21 @@ import { GetUser } from 'src/decorators/get-user.decorator';
 import { InviteFriendDto } from './friend.dto';
 import { JwtPayload } from 'src/types/jwt-payload.interface';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { InvitationService } from '../invitation/invitation.service';
 
 @Controller('friend')
 export class FriendController {
-	constructor(private readonly friendService: FriendService) {}
+	constructor(
+		private readonly friendService: FriendService,
+		private readonly invitationService: InvitationService,
+	) {}
 
-	@Post('/invite/:to')
+	@Post('/invite')
 	@UseGuards(JwtAuthGuard)
-	async inviteFriend(@GetUser() user: JwtPayload, @Param('to', ParseIntPipe) to: number, @Body() body: InviteFriendDto) {
+	async inviteFriend(@GetUser() user: JwtPayload, @Body() body: InviteFriendDto) {
 		return {
 			message: 'Invitation sent',
-			data: instanceToPlain(await this.friendService.inviteFriend({ to, from: user.sub, body: body?.body })),
+			invitation: instanceToPlain(await this.friendService.inviteFriend({ from: user.sub, ...body })),
 		};
 	}
 
@@ -25,7 +29,7 @@ export class FriendController {
 	async cancelInvitation(@GetUser() user: JwtPayload, @Param('invitationId', ParseIntPipe) invitationId: number) {
 		return {
 			message: 'Invitation canceled',
-			data: instanceToPlain(await this.friendService.cancelInvitation({ invitationId, userId: user.sub })),
+			invitation: instanceToPlain(await this.invitationService.cancel({ invitationId, userId: user.sub })),
 		};
 	}
 
@@ -34,7 +38,7 @@ export class FriendController {
 	async acceptInvitation(@GetUser() user: JwtPayload, @Param('invitationId', ParseIntPipe) invitationId: number) {
 		return {
 			message: 'Invitation accepted',
-			data: instanceToPlain(await this.friendService.replyInvitation({ invitationId, accepted: true, userId: user.sub })),
+			invitation: instanceToPlain(await this.friendService.replyInvitation({ invitationId, accepted: true, userId: user.sub })),
 		};
 	}
 
@@ -43,7 +47,7 @@ export class FriendController {
 	async rejectInvitation(@GetUser() user: JwtPayload, @Param('invitationId', ParseIntPipe) invitationId: number) {
 		return {
 			message: 'Invitation rejected',
-			data: instanceToPlain(await this.friendService.replyInvitation({ invitationId, accepted: false, userId: user.sub })),
+			invitation: instanceToPlain(await this.friendService.replyInvitation({ invitationId, accepted: false, userId: user.sub })),
 		};
 	}
 

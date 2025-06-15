@@ -27,9 +27,21 @@ export class ChatService {
 		private readonly userService: UserService,
 	) {}
 
-	async findById(id: number, type: ChatType, relations: boolean | ChatRelation[] = false) {
+	async findParticipant(chatId: number, userId: number, type?: ChatType) {
+		const chat = await this.findById(chatId, true, type);
+		await this.userService.findById(userId);
+		const participant = chat.participants.find((participant) => participant.user.id === userId);
+
+		if (!participant) {
+			throw new BadRequestException('Participant not found in this chat');
+		}
+
+		return participant;
+	}
+
+	async findById(id: number, relations: boolean | ChatRelation[] = false, type?: ChatType) {
 		const chat = await this.chatRepository.findOne({
-			where: { id, type },
+			where: { id, ...(type ? { type } : {}) },
 			relations: getChatRelations(relations),
 		});
 
@@ -90,5 +102,31 @@ export class ChatService {
 		this.logger.log(`Chat created for user ${user1.id} and user ${user2.id}: ${chat.id}`);
 
 		return this.chatRepository.save(chat);
+	}
+
+	async changeParticipantSettings(userId: number, { muted, pinned, chatId }: { muted?: boolean; pinned?: boolean; chatId: number }) {
+		await this.findById(chatId, true);
+
+		const participant = await this.findParticipant(chatId, userId);
+
+		participant.settings.muted = muted ?? participant.settings.muted;
+		participant.settings.pinned = pinned ?? participant.settings.pinned;
+
+		this.logger.log(`User ${userId} ${muted ? 'muted' : 'unmuted'} and ${pinned ? 'pinned' : 'unpinned'} in group ${chatId}`);
+
+		return this.chatParticipantRepository.save(participant);
+	}
+
+	async changeNickname({ chatId, userId, nickname }: { chatId: number; userId: number; nickname: string }) {
+		await this.findById(chatId, true);
+		await this.userService.findById(userId);
+
+		const participant = await this.findParticipant(chatId, userId);
+
+		participant.nickname = nickname;
+
+		this.logger.log(`User ${userId} changed nickname to ${nickname} in group ${chatId}`);
+
+		return this.chatParticipantRepository.save(participant);
 	}
 }

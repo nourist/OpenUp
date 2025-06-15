@@ -27,20 +27,25 @@ export class GroupService {
 		private readonly notificationService: NotificationService,
 	) {}
 
-	async isParticipant(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+	async isGroupParticipant(chatId: number, userId: number) {
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 		return group.participants.some((participant) => participant.user.id === userId);
 	}
 
-	async findParticipant(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
-		const participant = group.participants.find((participant) => participant.user.id === userId);
+	async findGroupParticipant(chatId: number, userId: number) {
+		return this.chatService.findParticipant(chatId, userId, ChatType.GROUP);
+	}
 
-		if (!participant) {
-			throw new BadRequestException('Participant not found');
-		}
+	async isGroupAdmin(chatId: number, userId: number) {
+		await this.chatService.findById(chatId, false, ChatType.GROUP);
+		const participant = await this.findGroupParticipant(chatId, userId);
+		return participant.isAdmin;
+	}
 
-		return participant;
+	async isGroupOwner(chatId: number, userId: number) {
+		await this.chatService.findById(chatId, false, ChatType.GROUP);
+		const participant = await this.findGroupParticipant(chatId, userId);
+		return participant.isOwner;
 	}
 
 	async createGroupChat(ownerId: number, { name, avatar }: { name?: string; avatar?: string }) {
@@ -69,7 +74,7 @@ export class GroupService {
 	}
 
 	async changeInfo({ chatId, name, avatar }: { chatId: number; name?: string; avatar?: string }) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP);
+		const group = await this.chatService.findById(chatId, false, ChatType.GROUP);
 
 		group.name = name ?? group.name;
 		group.avatar = avatar ?? group.avatar;
@@ -83,9 +88,9 @@ export class GroupService {
 		const from = await this.userService.findById(fromId);
 		const to = await this.userService.findById(toId);
 
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
-		if (await this.isParticipant(chatId, toId)) {
+		if (await this.isGroupParticipant(chatId, toId)) {
 			throw new BadRequestException('User is already a member of the group');
 		}
 
@@ -108,11 +113,11 @@ export class GroupService {
 	}
 
 	async addMember(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 		const user = await this.userService.findById(userId, true);
 
-		if (await this.isParticipant(chatId, userId)) {
-			const participant = await this.findParticipant(chatId, userId);
+		if (await this.isGroupParticipant(chatId, userId)) {
+			const participant = await this.findGroupParticipant(chatId, userId);
 			if (participant.isActive) {
 				throw new BadRequestException('User is already a member of the group');
 			}
@@ -136,10 +141,9 @@ export class GroupService {
 	}
 
 	async removeMember(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
-		await this.userService.findById(userId);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
-		const participant = await this.findParticipant(chatId, userId);
+		const participant = await this.findGroupParticipant(chatId, userId);
 
 		participant.isActive = false;
 
@@ -148,23 +152,8 @@ export class GroupService {
 		return this.chatRepository.save(group);
 	}
 
-	async cancelInvitation({ chatId, invitationId }: { chatId: number; invitationId: number }) {
-		await this.chatService.findById(chatId, ChatType.GROUP, true);
-		const invitation = await this.invitationRepository.findOne({ where: { id: invitationId, group: { id: chatId } } });
-
-		if (!invitation) {
-			throw new BadRequestException('Invitation not found');
-		}
-
-		invitation.status = InvitationStatus.CANCELED;
-
-		this.logger.log(`Invitation ${invitationId} canceled for group ${chatId}`);
-
-		return this.invitationRepository.save(invitation);
-	}
-
 	async replyInvitation({ chatId, invitationId, accepted }: { chatId: number; invitationId: number; accepted: boolean }) {
-		await this.chatService.findById(chatId, ChatType.GROUP, true);
+		await this.chatService.findById(chatId, true, ChatType.GROUP);
 		const invitation = await this.invitationRepository.findOne({ where: { id: invitationId, group: { id: chatId }, status: InvitationStatus.PENDING } });
 
 		if (!invitation) {
@@ -193,10 +182,9 @@ export class GroupService {
 	}
 
 	async banUser(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
-		await this.userService.findById(userId);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
-		const participant = await this.findParticipant(chatId, userId);
+		const participant = await this.findGroupParticipant(chatId, userId);
 
 		participant.isBanned = true;
 		participant.isActive = false;
@@ -206,24 +194,23 @@ export class GroupService {
 		return this.chatRepository.save(group);
 	}
 
-	async changeNickname({ chatId, userId, nickname }: { chatId: number; userId: number; nickname: string }) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
-		await this.userService.findById(userId);
+	async unbanUser(chatId: number, userId: number) {
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
-		const participant = await this.findParticipant(chatId, userId);
+		const participant = await this.findGroupParticipant(chatId, userId);
 
-		participant.nickname = nickname;
+		participant.isBanned = false;
+		participant.isActive = true;
 
-		this.logger.log(`User ${userId} changed nickname to ${nickname} in group ${chatId}`);
+		this.logger.log(`User ${userId} unbanned from group ${chatId}`);
 
 		return this.chatRepository.save(group);
 	}
 
 	async changeRole({ chatId, userId, isAdmin }: { chatId: number; userId: number; isAdmin: boolean }) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
-		await this.userService.findById(userId);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
-		const participant = await this.findParticipant(chatId, userId);
+		const participant = await this.findGroupParticipant(chatId, userId);
 
 		participant.isAdmin = isAdmin;
 		this.logger.log(`User ${userId} changed role to ${isAdmin ? 'admin' : 'member'} in group ${chatId}`);
@@ -231,21 +218,8 @@ export class GroupService {
 		return this.chatRepository.save(group);
 	}
 
-	async changeParticipantSettings(userId: number, { muted, pinned, chatId }: { muted?: boolean; pinned?: boolean; chatId: number }) {
-		await this.chatService.findById(chatId, ChatType.GROUP, true);
-
-		const participant = await this.findParticipant(chatId, userId);
-
-		participant.settings.muted = muted ?? participant.settings.muted;
-		participant.settings.pinned = pinned ?? participant.settings.pinned;
-
-		this.logger.log(`User ${userId} ${muted ? 'muted' : 'unmuted'} and ${pinned ? 'pinned' : 'unpinned'} in group ${chatId}`);
-
-		return this.chatParticipantRepository.save(participant);
-	}
-
 	async setInviteUUIDFeature({ chatId, enabled }: { chatId: number; enabled: boolean }) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		group.allowInviteUUID = enabled;
 
@@ -255,7 +229,7 @@ export class GroupService {
 	}
 
 	async generateInviteUUID(chatId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		if (!group.allowInviteUUID) {
 			throw new BadRequestException('Invite UUID is not enabled for this group');
@@ -270,7 +244,7 @@ export class GroupService {
 	}
 
 	async revokeInviteUUID(chatId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		group.inviteUUID = null;
 		group.inviteUUIDExpiresAt = null;
@@ -281,7 +255,7 @@ export class GroupService {
 	}
 
 	async extendInviteUUID(chatId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		if (!group.allowInviteUUID) {
 			throw new BadRequestException('Invite UUID is not enabled for this group');
@@ -293,7 +267,7 @@ export class GroupService {
 	}
 
 	async joinGroupByUUID(userId: number, { chatId, inviteUUID }: { chatId: number; inviteUUID: string }) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		if (!group.allowInviteUUID) {
 			throw new BadRequestException('Invite UUID is not enabled for this group');
