@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
+import { Cron } from '@nestjs/schedule';
 
 import { Notification, NotificationType } from 'src/entities/notification.entity';
 import { User } from 'src/entities/user.entity';
@@ -33,5 +34,20 @@ export class NotificationService {
 			await this.notificationRepository.save(newNotification);
 			this.logger.log(`Notification created for user ${to.id}`);
 		}
+	}
+
+	@Cron('0 0 * * *')
+	async deleteOldNotifications() {
+		this.logger.log('Deleting old notifications');
+
+		const notifications = await this.notificationRepository.find({
+			where: {
+				createdAt: LessThan(new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)),
+			},
+		});
+		this.logger.log(`Found ${notifications.length} old notifications`);
+		await this.notificationRepository.remove(notifications);
+
+		this.logger.log('Old notifications deleted');
 	}
 }

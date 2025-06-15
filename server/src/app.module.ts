@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,6 +19,7 @@ import { GroupModule } from './modules/group/group.module';
 		DevtoolsModule.register({
 			http: process.env.NODE_ENV !== 'production',
 		}),
+		ScheduleModule.forRoot(),
 		TypeOrmModule.forRoot({
 			type: 'postgres',
 			host: process.env.DB_HOST,
