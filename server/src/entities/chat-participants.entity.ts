@@ -40,8 +40,8 @@ export class ChatParticipant {
 	@Column({ default: true })
 	isActive: boolean;
 
-	@Column({ nullable: true })
-	nickname?: string;
+	@Column({ nullable: true, type: 'varchar', length: 255 })
+	nickname?: string | null;
 
 	@CreateDateColumn()
 	createdAt: Date;

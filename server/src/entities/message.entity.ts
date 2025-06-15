@@ -14,8 +14,8 @@ import {
 } from 'typeorm';
 
 import { User } from './user.entity';
-import { MessageAttachment } from './messageAttachment.entity';
-import { MessageReaction } from './messageReaction.entity';
+import { MessageAttachment } from './message-attachment.entity';
+import { MessageReaction } from './message-reaction.entity';
 import { Chat } from './chat.entity';
 
 @Entity('messages')

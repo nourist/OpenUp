@@ -22,7 +22,7 @@ export class Notification {
 	type: NotificationType;
 
 	@ManyToOne(() => Invitation, { nullable: true, onDelete: 'CASCADE' })
-	invitation?: Invitation;
+	invitation?: Invitation | null;
 
 	@ManyToOne(() => User, (user) => user.notifications, { onDelete: 'CASCADE' })
 	user: User;

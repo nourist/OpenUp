@@ -4,10 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
 import { Chat } from 'src/entities/chat.entity';
-import { ChatParticipant } from 'src/entities/chatParticipants.entity';
+import { ChatParticipant } from 'src/entities/chat-participants.entity';
 import { Message } from 'src/entities/message.entity';
-import { MessageReaction } from 'src/entities/messageReaction.entity';
-import { MessageAttachment } from 'src/entities/messageAttachment.entity';
+import { MessageReaction } from 'src/entities/message-reaction.entity';
+import { MessageAttachment } from 'src/entities/message-attachment.entity';
 import { UserModule } from '../user/user.module';
 
 @Module({

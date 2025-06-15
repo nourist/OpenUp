@@ -40,7 +40,7 @@ export class Invitation {
 	to: User;
 
 	@ManyToOne(() => Chat, (chat) => chat.invitations, { onDelete: 'CASCADE', nullable: true })
-	group?: Chat;
+	group?: Chat | null;
 
 	@Column({ default: '' })
 	body: string;

@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationError } from 'class-validator';
 import * as cookieParser from 'cookie-parser';
 
+import { AllExceptionsFilter } from './fillters/http-exception.filter';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -35,6 +36,7 @@ async function bootstrap() {
 			},
 		}),
 	);
+	app.useGlobalFilters(new AllExceptionsFilter());
 
 	await app.listen(process.env.PORT ?? 8080);
 }

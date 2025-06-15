@@ -24,15 +24,15 @@ export class MessageAttachment {
 	})
 	type: AttachmentEnum;
 
-	@Column({ nullable: true })
-	fileName: string;
+	@Column({ nullable: true, type: 'varchar', length: 255 })
+	fileName: string | null;
 
-	@Column({ nullable: true })
-	fileSize: number;
+	@Column({ nullable: true, type: 'int' })
+	fileSize: number | null;
 
-	@Column({ nullable: true })
-	fileType: string;
+	@Column({ nullable: true, type: 'varchar', length: 255 })
+	fileType: string | null;
 
-	@Column({ nullable: true })
-	fileURL: string;
+	@Column({ nullable: true, type: 'text' })
+	fileURL: string | null;
 }

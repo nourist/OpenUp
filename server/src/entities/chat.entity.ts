@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 import { Message } from './message.entity';
-import { ChatParticipant } from './chatParticipants.entity';
+import { ChatParticipant } from './chat-participants.entity';
 import { Invitation } from './invitation.entity';
 
 export enum ChatType {
@@ -28,22 +28,22 @@ export class Chat {
 
 	@OneToOne(() => Message, { nullable: true, onDelete: 'SET NULL' })
 	@JoinColumn()
-	lastMessage?: Message;
+	lastMessage?: Message | null;
 
 	@Column({ default: false })
 	allowInviteUUID: boolean;
 
-	@Column({ nullable: true })
+	@Column({ nullable: true, type: 'text' })
 	inviteUUID?: string | null;
 
-	@Column({ nullable: true })
+	@Column({ nullable: true, type: 'timestamptz' })
 	inviteUUIDExpiresAt?: Date | null;
 
-	@Column({ nullable: true })
-	avatar?: string;
+	@Column({ nullable: true, type: 'text' })
+	avatar?: string | null;
 
-	@Column({ nullable: true })
-	name?: string;
+	@Column({ nullable: true, type: 'varchar', length: 255 })
+	name?: string | null;
 
 	@OneToMany(() => Invitation, (invitation) => invitation.group)
 	invitations: Invitation[];

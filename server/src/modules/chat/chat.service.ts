@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { User } from 'src/entities/user.entity';
-import { ChatParticipant } from 'src/entities/chatParticipants.entity';
+import { ChatParticipant } from 'src/entities/chat-participants.entity';
 import { UserService } from '../user/user.service';
 
 export type ChatRelation = 'participants' | 'participants.user' | 'lastMessage';

@@ -3,7 +3,7 @@ import { Exclude } from 'class-transformer';
 
 import { Notification } from './notification.entity';
 import { Invitation } from './invitation.entity';
-import { ChatParticipant } from './chatParticipants.entity';
+import { ChatParticipant } from './chat-participants.entity';
 
 export interface UserSettings {
 	preferLanguage: string;
@@ -40,14 +40,14 @@ export class User {
 	email: string;
 
 	@Exclude()
-	@Column({ nullable: true })
-	password?: string;
+	@Column({ nullable: true, type: 'text' })
+	password?: string | null;
 
 	@Column()
 	name: string;
 
-	@Column({ nullable: true })
-	avatar?: string;
+	@Column({ nullable: true, type: 'text' })
+	avatar?: string | null;
 
 	@ManyToMany(() => User, (user) => user.friendList)
 	@JoinTable()

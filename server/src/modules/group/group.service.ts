@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
-import { ChatParticipant } from 'src/entities/chatParticipants.entity';
+import { ChatParticipant } from 'src/entities/chat-participants.entity';
 import { ChatService } from '../chat/chat.service';
 import { Invitation, InvitationStatus, InvitationType } from 'src/entities/invitation.entity';
 import { UserService } from '../user/user.service';
@@ -27,12 +27,29 @@ export class GroupService {
 		private readonly notificationService: NotificationService,
 	) {}
 
+	async isParticipant(chatId: number, userId: number) {
+		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		return group.participants.some((participant) => participant.user.id === userId);
+	}
+
+	async findParticipant(chatId: number, userId: number) {
+		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
+		const participant = group.participants.find((participant) => participant.user.id === userId);
+
+		if (!participant) {
+			throw new BadRequestException('Participant not found');
+		}
+
+		return participant;
+	}
+
 	async createGroupChat(ownerId: number, { name, avatar }: { name?: string; avatar?: string }) {
 		const owner = await this.userService.findById(ownerId, true);
 
 		const ownerParticipant = this.chatParticipantRepository.create({
 			user: owner,
 			isOwner: true,
+			isAdmin: true,
 		});
 
 		const savedOwnerParticipant = await this.chatParticipantRepository.save(ownerParticipant);
@@ -90,22 +107,6 @@ export class GroupService {
 		return this.chatRepository.save(group);
 	}
 
-	async isParticipant(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
-		return group.participants.some((participant) => participant.user.id === userId);
-	}
-
-	async findParticipant(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
-		const participant = group.participants.find((participant) => participant.user.id === userId);
-
-		if (!participant) {
-			throw new BadRequestException('Participant not found');
-		}
-
-		return participant;
-	}
-
 	async addMember(chatId: number, userId: number) {
 		const group = await this.chatService.findById(chatId, ChatType.GROUP, true);
 		const user = await this.userService.findById(userId, true);
@@ -139,10 +140,6 @@ export class GroupService {
 		await this.userService.findById(userId);
 
 		const participant = await this.findParticipant(chatId, userId);
-
-		if (!participant) {
-			throw new BadRequestException('User is not a member of the group');
-		}
 
 		participant.isActive = false;
 
@@ -201,10 +198,6 @@ export class GroupService {
 
 		const participant = await this.findParticipant(chatId, userId);
 
-		if (!participant) {
-			throw new BadRequestException('User is not a member of the group');
-		}
-
 		participant.isBanned = true;
 		participant.isActive = false;
 
@@ -219,10 +212,6 @@ export class GroupService {
 
 		const participant = await this.findParticipant(chatId, userId);
 
-		if (!participant) {
-			throw new BadRequestException('User is not a member of the group');
-		}
-
 		participant.nickname = nickname;
 
 		this.logger.log(`User ${userId} changed nickname to ${nickname} in group ${chatId}`);
@@ -236,10 +225,6 @@ export class GroupService {
 
 		const participant = await this.findParticipant(chatId, userId);
 
-		if (!participant) {
-			throw new BadRequestException('User is not a member of the group');
-		}
-
 		participant.isAdmin = isAdmin;
 		this.logger.log(`User ${userId} changed role to ${isAdmin ? 'admin' : 'member'} in group ${chatId}`);
 
@@ -250,10 +235,6 @@ export class GroupService {
 		await this.chatService.findById(chatId, ChatType.GROUP, true);
 
 		const participant = await this.findParticipant(chatId, userId);
-
-		if (!participant) {
-			throw new BadRequestException('User is not a member of the group');
-		}
 
 		participant.settings.muted = muted ?? participant.settings.muted;
 		participant.settings.pinned = pinned ?? participant.settings.pinned;
