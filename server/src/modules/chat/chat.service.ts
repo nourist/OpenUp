@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -6,6 +6,14 @@ import { Chat, ChatType } from 'src/entities/chat.entity';
 import { User } from 'src/entities/user.entity';
 import { ChatParticipant } from 'src/entities/chatParticipants.entity';
 import { UserService } from '../user/user.service';
+
+export type ChatRelation = 'participants' | 'participants.user' | 'lastMessage';
+
+const getChatRelations = (relations: boolean | ChatRelation[]): ChatRelation[] => {
+	if (relations === true) return ['participants', 'participants.user', 'lastMessage'];
+	if (Array.isArray(relations)) return relations;
+	return [];
+};
 
 @Injectable()
 export class ChatService {
@@ -18,6 +26,20 @@ export class ChatService {
 		private readonly chatParticipantRepository: Repository<ChatParticipant>,
 		private readonly userService: UserService,
 	) {}
+
+	async findById(id: number, type: ChatType, relations: boolean | ChatRelation[] = false) {
+		const chat = await this.chatRepository.findOne({
+			where: { id, type },
+			relations: getChatRelations(relations),
+		});
+
+		if (!chat) {
+			this.logger.log(`Chat not found for id ${id} and type ${type}`);
+			throw new BadRequestException('Chat not found');
+		}
+
+		return chat;
+	}
 
 	async findDirectChat(user1: User, user2: User) {
 		const chat = await this.chatRepository

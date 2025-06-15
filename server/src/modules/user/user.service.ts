@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { User } from '../../entities/user.entity';
 
-type UserRelation =
+export type UserRelation =
 	| 'friendList'
 	| 'blockedList'
 	| 'blockedBy'
@@ -17,24 +17,25 @@ type UserRelation =
 	| 'chats.chat'
 	| 'chats.chat.participants'
 	| 'chats.chat.lastMessage';
-const userRelations: UserRelation[] = [
-	'friendList',
-	'blockedList',
-	'blockedBy',
-	'notifications',
-	'notifications.invitation',
-	'notifications.invitation.from',
-	'invitations',
-	'invitations.to',
-	'chats',
-	'chats.chat',
-	'chats.chat.participants',
-	'chats.chat.lastMessage',
-];
 
 const getUserRelations = (relations: boolean | UserRelation[]): UserRelation[] => {
 	if (typeof relations === 'boolean') {
-		return relations ? userRelations : [];
+		return relations
+			? [
+					'friendList',
+					'blockedList',
+					'blockedBy',
+					'notifications',
+					'notifications.invitation',
+					'notifications.invitation.from',
+					'invitations',
+					'invitations.to',
+					'chats',
+					'chats.chat',
+					'chats.chat.participants',
+					'chats.chat.lastMessage',
+				]
+			: [];
 	}
 	return relations;
 };

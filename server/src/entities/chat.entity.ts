@@ -2,20 +2,11 @@ import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, Prim
 
 import { Message } from './message.entity';
 import { ChatParticipant } from './chatParticipants.entity';
+import { Invitation } from './invitation.entity';
 
 export enum ChatType {
 	GROUP = 'group',
 	DIRECT = 'direct',
-}
-
-export interface ChatSettings {
-	allowInviteLink: boolean;
-	inviteLink: string;
-	inviteLinkExpiresAt: Date;
-
-	onlyAdminsCanPost: boolean;
-	allowMemberAddOthers: boolean;
-	allowMemberChangeInfo: boolean;
 }
 
 @Entity('chats')
@@ -39,8 +30,23 @@ export class Chat {
 	@JoinColumn()
 	lastMessage?: Message;
 
-	@Column({ type: 'jsonb', nullable: true })
-	settings?: ChatSettings;
+	@Column({ default: false })
+	allowInviteUUID: boolean;
+
+	@Column({ nullable: true })
+	inviteUUID?: string | null;
+
+	@Column({ nullable: true })
+	inviteUUIDExpiresAt?: Date | null;
+
+	@Column({ nullable: true })
+	avatar?: string;
+
+	@Column({ nullable: true })
+	name?: string;
+
+	@OneToMany(() => Invitation, (invitation) => invitation.group)
+	invitations: Invitation[];
 
 	@CreateDateColumn()
 	createdAt: Date;

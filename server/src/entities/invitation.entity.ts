@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 
 import { User } from './user.entity';
+import { Chat } from './chat.entity';
 
 export enum InvitationType {
 	GROUP = 'group',
@@ -37,6 +38,9 @@ export class Invitation {
 
 	@ManyToOne(() => User, { onDelete: 'CASCADE' })
 	to: User;
+
+	@ManyToOne(() => Chat, (chat) => chat.invitations, { onDelete: 'CASCADE', nullable: true })
+	group?: Chat;
 
 	@Column({ default: '' })
 	body: string;

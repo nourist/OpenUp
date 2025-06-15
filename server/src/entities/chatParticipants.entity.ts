@@ -40,9 +40,6 @@ export class ChatParticipant {
 	@Column({ default: true })
 	isActive: boolean;
 
-	@ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
-	invitedBy?: User;
-
 	@Column({ nullable: true })
 	nickname?: string;
 
