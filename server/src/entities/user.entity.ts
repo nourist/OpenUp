@@ -54,17 +54,7 @@ export class User {
 	friendList: User[];
 
 	@ManyToMany(() => User, (user) => user.blockedBy)
-	@JoinTable({
-		name: 'user_blocked_users',
-		joinColumn: {
-			name: 'blocker_id',
-			referencedColumnName: 'id',
-		},
-		inverseJoinColumn: {
-			name: 'blocked_id',
-			referencedColumnName: 'id',
-		},
-	})
+	@JoinTable()
 	blockedList: User[];
 
 	@ManyToMany(() => User, (user) => user.blockedList)

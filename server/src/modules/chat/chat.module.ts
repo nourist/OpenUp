@@ -8,11 +8,12 @@ import { ChatParticipant } from 'src/entities/chatParticipants.entity';
 import { Message } from 'src/entities/message.entity';
 import { MessageReaction } from 'src/entities/messageReaction.entity';
 import { MessageAttachment } from 'src/entities/messageAttachment.entity';
+import { UserModule } from '../user/user.module';
 
 @Module({
 	controllers: [ChatController],
 	providers: [ChatService],
-	imports: [TypeOrmModule.forFeature([Chat, ChatParticipant, Message, MessageReaction, MessageAttachment])],
+	imports: [TypeOrmModule.forFeature([Chat, ChatParticipant, Message, MessageReaction, MessageAttachment]), UserModule],
 	exports: [TypeOrmModule, ChatService],
 })
 export class ChatModule {}
