@@ -67,10 +67,13 @@ export class UserService {
 			where: { id },
 			relations: getUserRelations(relations),
 		});
+
+		//immediately throw error if user not found
 		if (!user) {
 			this.logger.log(`User not found for id ${id}`);
 			throw new BadRequestException('User not found');
 		}
+
 		return user;
 	}
 }

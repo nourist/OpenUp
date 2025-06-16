@@ -24,6 +24,7 @@ export class NotificationService {
 		},
 		checker: (to: User) => boolean,
 	) {
+		//check user notification setting before create notification
 		if (checker(to)) {
 			const newNotification = this.notificationRepository.create({
 				user: to,
@@ -38,6 +39,7 @@ export class NotificationService {
 
 	@Cron('0 0 * * *')
 	async deleteOldNotifications() {
+		//task schedule to delete old notifications
 		this.logger.log('Deleting old notifications');
 
 		const notifications = await this.notificationRepository.find({

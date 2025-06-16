@@ -111,6 +111,10 @@ export class FriendService {
 			throw new BadRequestException('Invitation not found');
 		}
 
+		/*
+		- update status
+		- if accepted and not friend, make friend and create direct chat
+		*/
 		if (accepted) {
 			invitation.status = InvitationStatus.ACCEPTED;
 			this.logger.log(`Invitation ${invitationId} accepted for user ${userId}`);

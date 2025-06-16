@@ -28,9 +28,10 @@ export class GroupService {
 		private readonly notificationService: NotificationService,
 	) {}
 
-	async isGroupParticipant(chatId: number, userId: number) {
+	async isGroupParticipant(chatId: number, userId: number, activeRequired = false) {
 		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
-		return group.participants.some((participant) => participant.user.id === userId);
+		return group.participants.some((participant) => participant.user.id === userId && (activeRequired ? participant.isActive : true));
+		//return true if participant is found and activeRequired is false or participant is active
 	}
 
 	async findGroupParticipant(chatId: number, userId: number) {
@@ -58,6 +59,7 @@ export class GroupService {
 			isOwner: true,
 			isAdmin: true,
 		});
+		//owner is also admin
 
 		const savedOwnerParticipant = await this.chatParticipantRepository.save(ownerParticipant);
 
@@ -65,7 +67,7 @@ export class GroupService {
 			type: ChatType.GROUP,
 			avatar,
 			participants: [savedOwnerParticipant],
-			name: name ?? `${owner.name}'s Group`,
+			name: name ?? `${owner.name}'s Group`, //default name is owner's name + 's Group'
 		});
 
 		const savedGroup = await this.chatRepository.save(group);
@@ -122,8 +124,10 @@ export class GroupService {
 		if (await this.isGroupParticipant(chatId, userId)) {
 			const participant = await this.findGroupParticipant(chatId, userId);
 			if (participant.isActive) {
+				//if user is already a member and active, throw error
 				throw new BadRequestException('User is already a member of the group');
 			}
+			//if user is already a member and not active, set active to true
 			participant.isActive = true;
 
 			await this.chatParticipantRepository.save(participant);
@@ -135,6 +139,7 @@ export class GroupService {
 			return updatedGroup;
 		}
 
+		//if user is not a member, create new participant
 		const participant = this.chatParticipantRepository.create({
 			user,
 			chat: group,
@@ -148,10 +153,11 @@ export class GroupService {
 	}
 
 	async removeMember(chatId: number, userId: number) {
-		await this.chatService.findById(chatId, false, ChatType.GROUP);
+		await this.chatService.findById(chatId, false, ChatType.GROUP); //check if group exists
 
 		const participant = await this.findGroupParticipant(chatId, userId);
 
+		//set active to false
 		participant.isActive = false;
 
 		await this.chatParticipantRepository.save(participant);
@@ -165,7 +171,7 @@ export class GroupService {
 
 	@Transactional()
 	async replyInvitation({ chatId, invitationId, accepted }: { chatId: number; invitationId: number; accepted: boolean }) {
-		await this.chatService.findById(chatId, true, ChatType.GROUP);
+		await this.chatService.findById(chatId, true, ChatType.GROUP); //check if group exists
 		const invitation = await this.invitationRepository.findOne({ where: { id: invitationId, group: { id: chatId }, status: InvitationStatus.PENDING } });
 
 		if (!invitation) {
@@ -173,6 +179,7 @@ export class GroupService {
 		}
 
 		if (accepted) {
+			//add member to group if accepted
 			await this.addMember(chatId, invitation.to.id);
 
 			invitation.status = InvitationStatus.ACCEPTED;
@@ -194,7 +201,7 @@ export class GroupService {
 	}
 
 	async banUser(chatId: number, userId: number) {
-		await this.chatService.findById(chatId, false, ChatType.GROUP);
+		await this.chatService.findById(chatId, false, ChatType.GROUP); //check if group exists
 
 		const participant = await this.findGroupParticipant(chatId, userId);
 
@@ -211,7 +218,7 @@ export class GroupService {
 	}
 
 	async unbanUser(chatId: number, userId: number) {
-		await this.chatService.findById(chatId, false, ChatType.GROUP);
+		await this.chatService.findById(chatId, false, ChatType.GROUP); //check if group exists
 
 		const participant = await this.findGroupParticipant(chatId, userId);
 
@@ -228,7 +235,7 @@ export class GroupService {
 	}
 
 	async changeRole({ chatId, userId, isAdmin }: { chatId: number; userId: number; isAdmin: boolean }) {
-		await this.chatService.findById(chatId, false, ChatType.GROUP);
+		await this.chatService.findById(chatId, false, ChatType.GROUP); //check if group exists
 
 		const participant = await this.findGroupParticipant(chatId, userId);
 
@@ -260,7 +267,7 @@ export class GroupService {
 		}
 
 		group.inviteUUID = uuidv4();
-		group.inviteUUIDExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3);
+		group.inviteUUIDExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3); //3 days
 
 		this.logger.log(`Invite UUID generated for group ${chatId}`);
 
@@ -285,7 +292,7 @@ export class GroupService {
 			throw new BadRequestException('Invite UUID is not enabled for this group');
 		}
 
-		group.inviteUUIDExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3);
+		group.inviteUUIDExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3); //3 days
 
 		this.logger.log(`Invite UUID extended for group ${chatId}`);
 	}

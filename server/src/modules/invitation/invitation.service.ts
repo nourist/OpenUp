@@ -18,10 +18,11 @@ export class InvitationService {
 
 	async cancel({ chatId, invitationId, userId }: { chatId?: number; invitationId: number; userId: number }) {
 		if (chatId) {
-			await this.chatService.findById(chatId, true, ChatType.GROUP);
+			await this.chatService.findById(chatId, true, ChatType.GROUP); //check if group exists, throw error if not
 		}
 
 		const invitation = await this.invitationRepository.findOne({
+			//check if invitation exists and is pending and from user
 			where: { id: invitationId, ...(chatId ? { group: { id: chatId } } : {}), status: InvitationStatus.PENDING, from: { id: userId } },
 		});
 

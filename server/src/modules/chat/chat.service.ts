@@ -32,6 +32,7 @@ export class ChatService {
 		await this.userService.findById(userId);
 		const participant = chat.participants.find((participant) => participant.user.id === userId);
 
+		//immediately throw error if participant not found
 		if (!participant) {
 			throw new BadRequestException('Participant not found in this chat');
 		}
@@ -47,6 +48,7 @@ export class ChatService {
 
 		if (!chat) {
 			this.logger.log(`Chat not found for id ${id} and type ${type}`);
+			//immediately throw error if chat not found
 			throw new BadRequestException('Chat not found');
 		}
 
@@ -74,6 +76,7 @@ export class ChatService {
 	async createDirectChat(user1: User, user2: User) {
 		const existingChat = await this.findDirectChat(user1, user2);
 		if (existingChat) {
+			//if direct chat already exists, return it
 			this.logger.log(`Direct chat already exists returning: ${existingChat.id}`);
 			return existingChat;
 		}
@@ -94,6 +97,7 @@ export class ChatService {
 
 		await this.chatParticipantRepository.save(participant2);
 
+		//create direact chat with participant1 and participant2
 		const chat = this.chatRepository.create({
 			type: ChatType.DIRECT,
 			participants: [participant1, participant2],
@@ -105,7 +109,7 @@ export class ChatService {
 	}
 
 	async changeParticipantSettings(userId: number, { muted, pinned, chatId }: { muted?: boolean; pinned?: boolean; chatId: number }) {
-		await this.findById(chatId, true);
+		await this.findById(chatId, true); //check if chat exists
 
 		const participant = await this.findParticipant(chatId, userId);
 
@@ -118,7 +122,7 @@ export class ChatService {
 	}
 
 	async changeNickname({ chatId, userId, nickname }: { chatId: number; userId: number; nickname: string }) {
-		await this.findById(chatId, true);
+		await this.findById(chatId, true); //check if chat exists
 		await this.userService.findById(userId);
 
 		const participant = await this.findParticipant(chatId, userId);

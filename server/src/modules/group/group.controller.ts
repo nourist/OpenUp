@@ -25,7 +25,7 @@ export class GroupController {
 	}
 
 	@Patch(':chatId')
-	@UseGuards(JwtAuthGuard, IsGroupAdminGuard)
+	@UseGuards(JwtAuthGuard, IsGroupMemberGuard, IsGroupAdminGuard)
 	async changeGroupInfo(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Body() body: ChangeGroupInfoDto) {
 		return {
 			message: 'Group info changed',
@@ -70,7 +70,7 @@ export class GroupController {
 	}
 
 	@Patch(':chatId/member/:userId/ban')
-	@UseGuards(JwtAuthGuard, IsGroupAdminGuard)
+	@UseGuards(JwtAuthGuard, IsGroupMemberGuard, IsGroupAdminGuard)
 	async banUser(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Param('userId', ParseIntPipe) userId: number) {
 		return {
 			message: 'User banned',
@@ -79,7 +79,7 @@ export class GroupController {
 	}
 
 	@Patch(':chatId/member/:userId/unban')
-	@UseGuards(JwtAuthGuard, IsGroupAdminGuard)
+	@UseGuards(JwtAuthGuard, IsGroupMemberGuard, IsGroupAdminGuard)
 	async unbanUser(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Param('userId', ParseIntPipe) userId: number) {
 		return {
 			message: 'User unbanned',
@@ -106,7 +106,7 @@ export class GroupController {
 	}
 
 	@Patch(':chatId/invite-uuid/enable')
-	@UseGuards(JwtAuthGuard, IsGroupAdminGuard)
+	@UseGuards(JwtAuthGuard, IsGroupMemberGuard, IsGroupAdminGuard)
 	async enableInviteUUID(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Invite UUID enabled',
@@ -115,7 +115,7 @@ export class GroupController {
 	}
 
 	@Patch(':chatId/invite-uuid/disable')
-	@UseGuards(JwtAuthGuard, IsGroupAdminGuard)
+	@UseGuards(JwtAuthGuard, IsGroupMemberGuard, IsGroupAdminGuard)
 	async disableInviteUUID(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Invite UUID disabled',
@@ -124,7 +124,7 @@ export class GroupController {
 	}
 
 	@Post(':chatId/invite-uuid')
-	@UseGuards(JwtAuthGuard, IsGroupAdminGuard)
+	@UseGuards(JwtAuthGuard, IsGroupMemberGuard, IsGroupAdminGuard)
 	async generateInviteUUID(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Invite UUID generated',
@@ -133,7 +133,7 @@ export class GroupController {
 	}
 
 	@Patch(':chatId/invite-uuid')
-	@UseGuards(JwtAuthGuard, IsGroupAdminGuard)
+	@UseGuards(JwtAuthGuard, IsGroupMemberGuard, IsGroupAdminGuard)
 	async extendInviteUUID(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Invite UUID extended',
@@ -142,7 +142,7 @@ export class GroupController {
 	}
 
 	@Delete(':chatId/invite-uuid')
-	@UseGuards(JwtAuthGuard, IsGroupAdminGuard)
+	@UseGuards(JwtAuthGuard, IsGroupMemberGuard, IsGroupAdminGuard)
 	async revokeInviteUUID(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Invite UUID revoked',
