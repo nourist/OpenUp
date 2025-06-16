@@ -28,12 +28,6 @@ export class GroupService {
 		private readonly notificationService: NotificationService,
 	) {}
 
-	async isGroupParticipant(chatId: number, userId: number, activeRequired = false) {
-		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
-		return group.participants.some((participant) => participant.user.id === userId && (activeRequired ? participant.isActive : true));
-		//return true if participant is found and activeRequired is false or participant is active
-	}
-
 	async findGroupParticipant(chatId: number, userId: number) {
 		return this.chatService.findParticipant(chatId, userId, ChatType.GROUP);
 	}
@@ -95,7 +89,7 @@ export class GroupService {
 
 		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
-		if (await this.isGroupParticipant(chatId, toId)) {
+		if (await this.chatService.isParticipant(chatId, toId)) {
 			throw new BadRequestException('User is already a member of the group');
 		}
 
@@ -121,7 +115,7 @@ export class GroupService {
 		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 		const user = await this.userService.findById(userId, true);
 
-		if (await this.isGroupParticipant(chatId, userId)) {
+		if (await this.chatService.isParticipant(chatId, userId)) {
 			const participant = await this.findGroupParticipant(chatId, userId);
 			if (participant.isActive) {
 				//if user is already a member and active, throw error

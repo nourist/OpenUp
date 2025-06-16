@@ -1,11 +1,12 @@
-import { Body, Controller, Param, ParseIntPipe, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Query, UseGuards } from '@nestjs/common';
 import { instanceToPlain } from 'class-transformer';
 
 import { ChatService } from './chat.service';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { JwtPayload } from 'src/types/jwt-payload.interface';
-import { ChangeNicknameDto } from './chat.dto';
+import { ChangeNicknameDto, GetMessagesDto } from './chat.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { IsChatParticipantGuard } from 'src/guards/chat-participant.guard';
 
 @Controller('chat')
 export class ChatController {
@@ -53,6 +54,15 @@ export class ChatController {
 		return {
 			message: 'Chat nickname changed',
 			participant: instanceToPlain(await this.chatService.changeNickname({ chatId, userId: user.sub, nickname: body.nickname })),
+		};
+	}
+
+	@Get(':chatId/messages')
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
+	async getMessages(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Query() query: GetMessagesDto) {
+		return {
+			messages: instanceToPlain(await this.chatService.getMessages({ ...query, chatId })),
+			unreadMessagesCount: await this.chatService.getUnreadMessagesCount(chatId, user.sub),
 		};
 	}
 }

@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Not, Repository } from 'typeorm';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { User } from 'src/entities/user.entity';
 import { ChatParticipant } from 'src/entities/chat-participants.entity';
 import { UserService } from '../user/user.service';
+import { Message } from 'src/entities/message.entity';
 
 export type ChatRelation = 'participants' | 'participants.user' | 'lastMessage';
 
@@ -24,6 +25,8 @@ export class ChatService {
 		private readonly chatRepository: Repository<Chat>,
 		@InjectRepository(ChatParticipant)
 		private readonly chatParticipantRepository: Repository<ChatParticipant>,
+		@InjectRepository(Message)
+		private readonly messageRepository: Repository<Message>,
 		private readonly userService: UserService,
 	) {}
 
@@ -38,6 +41,12 @@ export class ChatService {
 		}
 
 		return participant;
+	}
+
+	async isParticipant(chatId: number, userId: number, activeRequired = false) {
+		const chat = await this.findById(chatId, true);
+		return chat.participants.some((participant) => participant.user.id === userId && (activeRequired ? participant.isActive : true));
+		//return true if participant is found and activeRequired is false or participant is active
 	}
 
 	async findById(id: number, relations: boolean | ChatRelation[] = false, type?: ChatType) {
@@ -133,4 +142,37 @@ export class ChatService {
 
 		return this.chatParticipantRepository.save(participant);
 	}
+
+	async getMessages({ chatId, limit, before }: { chatId: number; limit?: number; before?: Date }) {
+		await this.findById(chatId); //make sure that chat exists
+
+		before = before ?? new Date(); //if before is not provided, use current date to get newest messages
+		limit = limit ?? 50; //default limit is 50 messages
+
+		//get messages before before date, order by createdAt DESC, take limit messages
+		return this.messageRepository.find({
+			where: {
+				chat: { id: chatId },
+				createdAt: LessThan(before),
+			},
+			order: { createdAt: 'DESC' },
+			take: limit,
+			relations: ['sender', 'attachments', 'replyTo', 'mentionedUsers', 'reactions', 'seenBy'],
+		});
+	}
+
+	async getUnreadMessagesCount(chatId: number, userId: number) {
+		//check if chat & user exists
+		await this.findById(chatId, true);
+		await this.userService.findById(userId);
+
+		return this.messageRepository.count({
+			where: {
+				chat: { id: chatId },
+				seenBy: { id: Not(userId) },
+			},
+		});
+	}
+
+	async addMessage({ chatId, userId, body, replyToId, files }: { chatId: number; userId: number; body: string; replyToId?: number; files?: any[] }) {}
 }

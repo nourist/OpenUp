@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
@@ -6,6 +6,15 @@ import { Cron } from '@nestjs/schedule';
 import { Notification, NotificationType } from 'src/entities/notification.entity';
 import { User } from 'src/entities/user.entity';
 import { Invitation } from 'src/entities/invitation.entity';
+
+type NotificationRelation = 'user' | 'invitation';
+
+const getNotificationRelations = (relations: boolean | NotificationRelation[]): NotificationRelation[] => {
+	if (typeof relations === 'boolean') {
+		return relations ? ['user', 'invitation'] : [];
+	}
+	return relations;
+};
 
 @Injectable()
 export class NotificationService {
@@ -15,6 +24,19 @@ export class NotificationService {
 		@InjectRepository(Notification)
 		private readonly notificationRepository: Repository<Notification>,
 	) {}
+
+	async findById(notificationId: number) {
+		const notification = await this.notificationRepository.findOne({ where: { id: notificationId }, relations: getNotificationRelations(true) });
+		if (!notification) {
+			throw new BadRequestException('Notification not found');
+		}
+		return notification;
+	}
+
+	async isNotificationReceiver(notificationId: number, userId: number) {
+		const notification = await this.findById(notificationId);
+		return notification.user.id === userId;
+	}
 
 	async createNotification(
 		to: User,
@@ -35,6 +57,12 @@ export class NotificationService {
 			await this.notificationRepository.save(newNotification);
 			this.logger.log(`Notification created for user ${to.id}`);
 		}
+	}
+
+	async seenNotification(notificationId: number) {
+		const notification = await this.findById(notificationId);
+		notification.seen = true;
+		return this.notificationRepository.save(notification);
 	}
 
 	@Cron('0 0 * * *')

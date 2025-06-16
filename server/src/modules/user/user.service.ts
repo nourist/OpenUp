@@ -11,6 +11,8 @@ export type UserRelation =
 	| 'notifications'
 	| 'notifications.invitation'
 	| 'notifications.invitation.from'
+	| 'notifications.message'
+	| 'notifications.message.chat'
 	| 'invitations'
 	| 'invitations.to'
 	| 'chats'
@@ -28,6 +30,8 @@ const getUserRelations = (relations: boolean | UserRelation[]): UserRelation[] =
 					'notifications',
 					'notifications.invitation',
 					'notifications.invitation.from',
+					'notifications.message',
+					'notifications.message.chat',
 					'invitations',
 					'invitations.to',
 					'chats',
