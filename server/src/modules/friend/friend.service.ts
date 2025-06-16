@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Transactional } from 'typeorm-transactional';
 
 import { User } from 'src/entities/user.entity';
 import { NotificationType } from 'src/entities/notification.entity';
@@ -48,6 +49,7 @@ export class FriendService {
 		this.logger.log(`User ${from.id} is now friends with user ${to.id}`);
 	}
 
+	@Transactional()
 	async inviteFriend({ from: fromId, to: toId, body }: { from: number; to: number; body?: string }) {
 		const to = await this.userService.findById(toId, ['blockedList']);
 		const from = await this.userService.findById(fromId, ['invitations', 'invitations.to', 'friendList']);
@@ -93,6 +95,7 @@ export class FriendService {
 		return savedInvitation;
 	}
 
+	@Transactional()
 	async replyInvitation({ userId, invitationId, accepted }: { userId: number; invitationId: number; accepted: boolean }) {
 		const invitation = await this.invitationRepository.findOne({
 			where: {
@@ -133,6 +136,7 @@ export class FriendService {
 		return invitation;
 	}
 
+	@Transactional()
 	async unfriend({ userId, friendId }: { userId: number; friendId: number }) {
 		const user = await this.userService.findById(userId, true);
 		const friend = await this.userService.findById(friendId, true);

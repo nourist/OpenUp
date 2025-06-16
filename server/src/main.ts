@@ -2,11 +2,14 @@ import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ValidationError } from 'class-validator';
 import * as cookieParser from 'cookie-parser';
+import { initializeTransactionalContext } from 'typeorm-transactional';
 
 import { AllExceptionsFilter } from './fillters/http-exception.filter';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+	initializeTransactionalContext();
+
 	const app = await NestFactory.create(AppModule, {
 		logger: ['error', 'warn', 'log', 'verbose', 'debug'],
 	});

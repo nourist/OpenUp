@@ -2,14 +2,15 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { Transactional } from 'typeorm-transactional';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { ChatParticipant } from 'src/entities/chat-participants.entity';
-import { ChatService } from '../chat/chat.service';
 import { Invitation, InvitationStatus, InvitationType } from 'src/entities/invitation.entity';
+import { NotificationType } from 'src/entities/notification.entity';
+import { ChatService } from '../chat/chat.service';
 import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
-import { NotificationType } from 'src/entities/notification.entity';
 
 @Injectable()
 export class GroupService {
@@ -48,6 +49,7 @@ export class GroupService {
 		return participant.isOwner;
 	}
 
+	@Transactional()
 	async createGroupChat(ownerId: number, { name, avatar }: { name?: string; avatar?: string }) {
 		const owner = await this.userService.findById(ownerId, true);
 
@@ -84,6 +86,7 @@ export class GroupService {
 		return this.chatRepository.save(group);
 	}
 
+	@Transactional()
 	async inviteMember({ chatId, fromId, toId, body }: { chatId: number; fromId: number; toId: number; body?: string }) {
 		const from = await this.userService.findById(fromId);
 		const to = await this.userService.findById(toId);
@@ -123,9 +126,13 @@ export class GroupService {
 			}
 			participant.isActive = true;
 
+			await this.chatParticipantRepository.save(participant);
+
 			this.logger.log(`User ${userId} added to group ${chatId}`);
 
-			return this.chatRepository.save(group);
+			const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
+
+			return updatedGroup;
 		}
 
 		const participant = this.chatParticipantRepository.create({
@@ -141,17 +148,22 @@ export class GroupService {
 	}
 
 	async removeMember(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
+		await this.chatService.findById(chatId, false, ChatType.GROUP);
 
 		const participant = await this.findGroupParticipant(chatId, userId);
 
 		participant.isActive = false;
 
+		await this.chatParticipantRepository.save(participant);
+
 		this.logger.log(`User ${userId} removed from group ${chatId}`);
 
-		return this.chatRepository.save(group);
+		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
+
+		return updatedGroup;
 	}
 
+	@Transactional()
 	async replyInvitation({ chatId, invitationId, accepted }: { chatId: number; invitationId: number; accepted: boolean }) {
 		await this.chatService.findById(chatId, true, ChatType.GROUP);
 		const invitation = await this.invitationRepository.findOne({ where: { id: invitationId, group: { id: chatId }, status: InvitationStatus.PENDING } });
@@ -182,40 +194,52 @@ export class GroupService {
 	}
 
 	async banUser(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
+		await this.chatService.findById(chatId, false, ChatType.GROUP);
 
 		const participant = await this.findGroupParticipant(chatId, userId);
 
 		participant.isBanned = true;
 		participant.isActive = false;
 
+		await this.chatParticipantRepository.save(participant);
+
 		this.logger.log(`User ${userId} banned from group ${chatId}`);
 
-		return this.chatRepository.save(group);
+		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
+
+		return updatedGroup;
 	}
 
 	async unbanUser(chatId: number, userId: number) {
-		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
+		await this.chatService.findById(chatId, false, ChatType.GROUP);
 
 		const participant = await this.findGroupParticipant(chatId, userId);
 
 		participant.isBanned = false;
 		participant.isActive = true;
 
+		await this.chatParticipantRepository.save(participant);
+
 		this.logger.log(`User ${userId} unbanned from group ${chatId}`);
 
-		return this.chatRepository.save(group);
+		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
+
+		return updatedGroup;
 	}
 
 	async changeRole({ chatId, userId, isAdmin }: { chatId: number; userId: number; isAdmin: boolean }) {
-		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
+		await this.chatService.findById(chatId, false, ChatType.GROUP);
 
 		const participant = await this.findGroupParticipant(chatId, userId);
 
 		participant.isAdmin = isAdmin;
 		this.logger.log(`User ${userId} changed role to ${isAdmin ? 'admin' : 'member'} in group ${chatId}`);
 
-		return this.chatRepository.save(group);
+		await this.chatParticipantRepository.save(participant);
+
+		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
+
+		return updatedGroup;
 	}
 
 	async setInviteUUIDFeature({ chatId, enabled }: { chatId: number; enabled: boolean }) {
@@ -266,6 +290,7 @@ export class GroupService {
 		this.logger.log(`Invite UUID extended for group ${chatId}`);
 	}
 
+	@Transactional()
 	async joinGroupByUUID(userId: number, { chatId, inviteUUID }: { chatId: number; inviteUUID: string }) {
 		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
@@ -281,10 +306,7 @@ export class GroupService {
 			throw new BadRequestException('Invite UUID has expired');
 		}
 
-		await this.addMember(chatId, userId);
-
 		this.logger.log(`User ${userId} joined group ${chatId} by invite UUID`);
-
-		return this.chatRepository.save(group);
+		return await this.addMember(chatId, userId);
 	}
 }
