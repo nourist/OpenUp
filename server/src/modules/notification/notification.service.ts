@@ -7,6 +7,7 @@ import { Notification, NotificationType } from 'src/entities/notification.entity
 import { User } from 'src/entities/user.entity';
 import { Invitation } from 'src/entities/invitation.entity';
 import { Message } from 'src/entities/message.entity';
+import { UserService } from '../user/user.service';
 
 type NotificationRelation = 'user' | 'invitation';
 
@@ -24,6 +25,7 @@ export class NotificationService {
 	constructor(
 		@InjectRepository(Notification)
 		private readonly notificationRepository: Repository<Notification>,
+		private readonly userService: UserService,
 	) {}
 
 	async findById(notificationId: number) {
@@ -60,6 +62,22 @@ export class NotificationService {
 			await this.notificationRepository.save(newNotification);
 			this.logger.log(`Notification created for user ${to.id}`);
 		}
+	}
+
+	async createNotificationForMentionedUsers(users: { id: number }[], message: Message) {
+		await Promise.all(
+			users.map(async ({ id }) => {
+				const user = await this.userService.findById(id);
+				return this.createNotification(
+					user,
+					{
+						type: NotificationType.MENTION,
+						message: message,
+					},
+					(user) => user.settings.notification.mention,
+				);
+			}),
+		);
 	}
 
 	async seenNotification(notificationId: number) {

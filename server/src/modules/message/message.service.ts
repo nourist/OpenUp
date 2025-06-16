@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { getAttachmentType } from 'src/utils/fileType';
 
 import { Message } from 'src/entities/message.entity';
-import { AttachmentEnum, MessageAttachment } from 'src/entities/message-attachment.entity';
+import { MessageAttachment } from 'src/entities/message-attachment.entity';
 
 @Injectable()
 export class MessageService {
@@ -27,25 +28,31 @@ export class MessageService {
 		return !!message;
 	}
 
+	filesToAttachments(files?: Express.Multer.File[]) {
+		return (
+			files?.map((file) => ({
+				type: getAttachmentType(file),
+				fileName: file.filename,
+				fileSize: file.size,
+				fileType: file.mimetype,
+			})) || []
+		).map((attachment) => this.attachmentRepository.create(attachment));
+	}
+
 	async create({
 		chatId,
 		senderId,
 		content,
 		replyToId,
 		mentionedUsersIds,
-		attachments,
+		files,
 	}: {
 		chatId: number;
 		senderId: number;
 		content?: string;
 		replyToId?: number;
 		mentionedUsersIds: number[];
-		attachments: {
-			type: AttachmentEnum;
-			fileName: string;
-			fileSize: number;
-			fileType: string;
-		}[];
+		files?: Express.Multer.File[];
 	}) {
 		const message = this.messageRepository.create({
 			chat: { id: chatId },
@@ -53,7 +60,7 @@ export class MessageService {
 			content,
 			replyTo: replyToId ? { id: replyToId } : undefined,
 			mentionedUsers: mentionedUsersIds.map((id) => ({ id })),
-			attachments: attachments.map((attachment) => this.attachmentRepository.create(attachment)),
+			attachments: this.filesToAttachments(files),
 		});
 		return this.messageRepository.save(message);
 	}

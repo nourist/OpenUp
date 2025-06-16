@@ -9,7 +9,6 @@ import { UserService } from '../user/user.service';
 import { Message } from 'src/entities/message.entity';
 import { Transactional } from 'typeorm-transactional';
 import { MessageService } from '../message/message.service';
-import { getAttachmentType } from 'src/utils/fileType';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from 'src/entities/notification.entity';
 
@@ -197,6 +196,32 @@ export class ChatService {
 		return this.chatRepository.save(chat);
 	}
 
+	async getMentionedUsers({ content, chatId, userId }: { content?: string; chatId: number; userId: number }) {
+		if (!content) return [];
+
+		let mentionedUsersIds: number[] = [];
+
+		mentionedUsersIds.push(...(content.match(/@(\d+)/g)?.map((id) => +id.slice(1)) || []));
+		if (content.includes('@all')) {
+			const chat = await this.findById(chatId, true);
+			mentionedUsersIds = chat.participants.map((participant) => participant.user.id).filter((id) => id !== userId);
+		}
+		mentionedUsersIds = [...new Set(mentionedUsersIds)];
+		mentionedUsersIds = mentionedUsersIds.filter((id) => id !== userId);
+		mentionedUsersIds = (await Promise.all(
+			mentionedUsersIds
+				.map(async (id) => {
+					if (await this.isParticipant(chatId, id).catch(() => false)) {
+						return id;
+					}
+					return null;
+				})
+				.filter((id) => id != null),
+		)) as number[];
+
+		return mentionedUsersIds;
+	}
+
 	@Transactional()
 	async addMessage({ chatId, userId, content, replyToId, files }: { chatId: number; userId: number; content?: string; replyToId?: number; files?: Express.Multer.File[] }) {
 		//chat id and user id was checked in guard
@@ -209,38 +234,10 @@ export class ChatService {
 			throw new BadRequestException('Content or files are required');
 		}
 
-		const attachments =
-			files?.map((file) => ({
-				type: getAttachmentType(file),
-				fileName: file.filename,
-				fileSize: file.size,
-				fileType: file.mimetype,
-			})) || [];
-
-		let mentionedUsersIds: number[] = [];
-
 		//get mentioned users ids from content
-		if (content) {
-			mentionedUsersIds.push(...(content.match(/@(\d+)/g)?.map((id) => +id.slice(1)) || []));
-			if (content.includes('@all')) {
-				const chat = await this.findById(chatId, true);
-				mentionedUsersIds = chat.participants.map((participant) => participant.user.id).filter((id) => id !== userId);
-			}
-			mentionedUsersIds = [...new Set(mentionedUsersIds)];
-			mentionedUsersIds = mentionedUsersIds.filter((id) => id !== userId);
-			mentionedUsersIds = (await Promise.all(
-				mentionedUsersIds
-					.map(async (id) => {
-						if (await this.isParticipant(chatId, id).catch(() => false)) {
-							return id;
-						}
-						return null;
-					})
-					.filter((id) => id != null),
-			)) as number[];
-		}
+		const mentionedUsersIds = await this.getMentionedUsers({ content, chatId, userId });
 
-		const message = await this.messageService.create({ chatId, senderId: userId, content, replyToId, mentionedUsersIds, attachments });
+		const message = await this.messageService.create({ chatId, senderId: userId, content, replyToId, mentionedUsersIds, files });
 
 		this.logger.log(`Message ${message.id} created in chat ${chatId}`);
 
@@ -250,18 +247,7 @@ export class ChatService {
 		this.logger.log(`Last message in chat ${chatId} updated to ${message.id}`);
 
 		//create notification for mentioned users
-		await Promise.all(
-			message.mentionedUsers.map((user) =>
-				this.notificationService.createNotification(
-					user,
-					{
-						type: NotificationType.MENTION,
-						message: message,
-					},
-					(user) => user.settings.notification.mention,
-				),
-			),
-		);
+		await this.notificationService.createNotificationForMentionedUsers(message.mentionedUsers, message);
 
 		this.logger.log(`Notification for mentioned users created`);
 
@@ -280,6 +266,56 @@ export class ChatService {
 		}
 
 		return message;
+	}
+
+	@Transactional()
+	async editMessage({
+		messageId,
+		content,
+		files,
+		attachments,
+		removeReplyTo,
+	}: {
+		messageId: number;
+		content?: string;
+		files?: Express.Multer.File[];
+		attachments?: { id: number }[];
+		removeReplyTo?: boolean;
+	}) {
+		//chat & user id was checked in guard
+		//sender id was checked in guard
+
+		const message = await this.messageService.findById(messageId);
+
+		//mark message as edited
+		message.isEdited = true;
+
+		//update content
+		if (content) message.content = content;
+
+		//update replyToId
+		if (removeReplyTo) message.replyTo = null;
+
+		//remove attachments that are not in attachments array, if attachments is not provided, remove all previous attachments
+		message.attachments = message.attachments.filter((attachment) => !attachments?.some((a) => a.id === attachment.id));
+
+		//add new attachments
+		if (files) message.attachments.push(...this.messageService.filesToAttachments(files));
+
+		const newMentionedUsersIds = await this.getMentionedUsers({ content, chatId: message.chat.id, userId: message.sender.id });
+		newMentionedUsersIds.filter((id) => !message.mentionedUsers.some((user) => user.id === id));
+
+		//create notification for mentioned users
+		await this.notificationService.createNotificationForMentionedUsers(
+			newMentionedUsersIds.map((id) => ({ id })),
+			message,
+		);
+
+		//update mentionedUsers
+		message.mentionedUsers.push(...(await Promise.all(newMentionedUsersIds.map((id) => this.userService.findById(id)))));
+
+		//update message
+		return this.messageRepository.save(message);
 	}
 
 	@Transactional()

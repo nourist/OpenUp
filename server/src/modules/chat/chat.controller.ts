@@ -3,14 +3,14 @@ import { instanceToPlain } from 'class-transformer';
 import { extname } from 'path';
 import { diskStorage } from 'multer';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { existsSync, mkdirSync } from 'fs';
 
 import { ChatService } from './chat.service';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { JwtPayload } from 'src/types/jwt-payload.interface';
-import { AddMessageDto, ChangeNicknameDto, GetMessagesDto } from './chat.dto';
+import { AddMessageDto, ChangeNicknameDto, EditMessageDto, GetMessagesDto } from './chat.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { IsChatParticipantGuard, IsMessageSenderGuard } from 'src/guards/chat-role.guard';
-import { existsSync, mkdirSync } from 'fs';
 import { fileFilter } from 'src/utils/fileType';
 
 @Controller('chat')
@@ -106,6 +106,20 @@ export class ChatController {
 		return {
 			message: 'Message deleted',
 			success: await this.chatService.deleteMessage({ chatId, messageId }),
+		};
+	}
+
+	@Patch(':chatId/message/:messageId')
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard, IsMessageSenderGuard)
+	async editMessage(
+		@GetUser() user: JwtPayload,
+		@Param('chatId', ParseIntPipe) chatId: number,
+		@Param('messageId', ParseIntPipe) messageId: number,
+		@Body() body: EditMessageDto,
+	) {
+		return {
+			message: 'Message edited',
+			success: await this.chatService.editMessage({ messageId, ...body }),
 		};
 	}
 

@@ -1,4 +1,5 @@
-import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 
 export class ChangeNicknameDto {
 	@IsNotEmpty()
@@ -31,4 +32,29 @@ export class AddMessageDto {
 	@IsOptional()
 	@IsNumber()
 	replyToId?: number;
+}
+
+export class AddMessageAttachmentDto {
+	@IsNumber()
+	id: number;
+}
+
+export class EditMessageDto {
+	@IsOptional()
+	@IsString()
+	content?: string;
+
+	@IsOptional()
+	@IsNumber()
+	replyToId?: number;
+
+	@IsOptional()
+	@IsArray()
+	@ValidateNested({ each: true })
+	@Type(() => AddMessageAttachmentDto)
+	attachments?: AddMessageAttachmentDto[];
+
+	@IsOptional()
+	@IsBoolean()
+	removeReplyTo?: boolean;
 }

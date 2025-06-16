@@ -37,7 +37,7 @@ export class Message {
 
 	@OneToOne(() => Message, { nullable: true, onDelete: 'SET NULL' })
 	@JoinColumn()
-	replyTo?: Message;
+	replyTo?: Message | null;
 
 	@ManyToMany(() => User)
 	@JoinTable()
@@ -49,6 +49,9 @@ export class Message {
 	@ManyToMany(() => User)
 	@JoinTable()
 	seenBy: User[];
+
+	@Column({ default: false })
+	isEdited: boolean;
 
 	//timestamp
 	@CreateDateColumn()
