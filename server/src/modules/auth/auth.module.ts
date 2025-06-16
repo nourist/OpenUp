@@ -11,10 +11,11 @@ import { JwtStrategy } from 'src/strategies/jwt.strategy';
 import { UserModule } from '../user/user.module';
 import { GoogleIdStrategy } from 'src/strategies/google-id.strategy';
 import { User } from 'src/entities/user.entity';
+import { GoogleService } from '../google/google.service';
 
 @Module({
 	controllers: [AuthController],
-	providers: [AuthService, LocalStrategy, JwtStrategy, GoogleIdStrategy],
+	providers: [AuthService, LocalStrategy, JwtStrategy, GoogleIdStrategy, GoogleService],
 	imports: [
 		UserModule,
 		PassportModule,

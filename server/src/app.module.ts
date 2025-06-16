@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -15,6 +17,9 @@ import { ChatModule } from './modules/chat/chat.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { GroupModule } from './modules/group/group.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
+import { GoogleService } from './modules/google/google.service';
+import { GoogleModule } from './modules/google/google.module';
+import { MessageModule } from './modules/message/message.module';
 
 @Module({
 	imports: [
@@ -43,6 +48,10 @@ import { InvitationModule } from './modules/invitation/invitation.module';
 				return ds.initialize().then(addTransactionalDataSource);
 			},
 		}),
+		ServeStaticModule.forRoot({
+			rootPath: join(__dirname, '..', 'uploads'),
+			serveRoot: '/uploads',
+		}),
 		AuthModule,
 		UserModule,
 		FriendModule,
@@ -50,8 +59,10 @@ import { InvitationModule } from './modules/invitation/invitation.module';
 		NotificationModule,
 		GroupModule,
 		InvitationModule,
+		GoogleModule,
+		MessageModule,
 	],
 	controllers: [AppController],
-	providers: [AppService],
+	providers: [AppService, GoogleService],
 })
 export class AppModule {}

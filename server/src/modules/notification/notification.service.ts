@@ -6,6 +6,7 @@ import { Cron } from '@nestjs/schedule';
 import { Notification, NotificationType } from 'src/entities/notification.entity';
 import { User } from 'src/entities/user.entity';
 import { Invitation } from 'src/entities/invitation.entity';
+import { Message } from 'src/entities/message.entity';
 
 type NotificationRelation = 'user' | 'invitation';
 
@@ -43,6 +44,7 @@ export class NotificationService {
 		notification: {
 			type: NotificationType;
 			invitation?: Invitation;
+			message?: Message;
 		},
 		checker: (to: User) => boolean,
 	) {
@@ -52,6 +54,7 @@ export class NotificationService {
 				user: to,
 				type: notification.type,
 				invitation: notification.invitation,
+				message: notification.message,
 			});
 
 			await this.notificationRepository.save(newNotification);

@@ -32,7 +32,7 @@ export class Message {
 	@Column({ default: '' })
 	content: string;
 
-	@OneToMany(() => MessageAttachment, (attachment) => attachment.message)
+	@OneToMany(() => MessageAttachment, (attachment) => attachment.message, { cascade: true })
 	attachments: MessageAttachment[];
 
 	@OneToOne(() => Message, { nullable: true, onDelete: 'SET NULL' })

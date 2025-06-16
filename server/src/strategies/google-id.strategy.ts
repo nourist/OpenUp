@@ -7,7 +7,7 @@ import * as passport from 'passport';
 
 import { UserService } from 'src/modules/user/user.service';
 import { User } from 'src/entities/user.entity';
-import { getUser } from 'src/services/google';
+import { GoogleService } from 'src/modules/google/google.service';
 
 @Injectable()
 export class GoogleIdStrategy extends Strategy {
@@ -17,6 +17,7 @@ export class GoogleIdStrategy extends Strategy {
 		private readonly userService: UserService,
 		@InjectRepository(User)
 		private readonly userRepository: Repository<User>,
+		private readonly googleService: GoogleService,
 	) {
 		super();
 		passport.use(this.name, this);
@@ -28,7 +29,7 @@ export class GoogleIdStrategy extends Strategy {
 			return this.fail('No ID token provided', 400);
 		}
 
-		void getUser(idToken).then(async (res) => {
+		void this.googleService.getUser(idToken).then(async (res) => {
 			const payload = res.data as {
 				email: string;
 				name?: string;

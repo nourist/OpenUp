@@ -5,15 +5,14 @@ import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
 import { Chat } from 'src/entities/chat.entity';
 import { ChatParticipant } from 'src/entities/chat-participants.entity';
-import { Message } from 'src/entities/message.entity';
-import { MessageReaction } from 'src/entities/message-reaction.entity';
-import { MessageAttachment } from 'src/entities/message-attachment.entity';
 import { UserModule } from '../user/user.module';
+import { MessageModule } from '../message/message.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
 	controllers: [ChatController],
 	providers: [ChatService],
-	imports: [TypeOrmModule.forFeature([Chat, ChatParticipant, Message, MessageReaction, MessageAttachment]), UserModule],
+	imports: [TypeOrmModule.forFeature([Chat, ChatParticipant]), UserModule, MessageModule, NotificationModule],
 	exports: [TypeOrmModule, ChatService],
 })
 export class ChatModule {}

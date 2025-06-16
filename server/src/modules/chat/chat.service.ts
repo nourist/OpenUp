@@ -1,12 +1,17 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Not, Repository } from 'typeorm';
+import { IsNull, LessThan, Not, Repository } from 'typeorm';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { User } from 'src/entities/user.entity';
 import { ChatParticipant } from 'src/entities/chat-participants.entity';
 import { UserService } from '../user/user.service';
 import { Message } from 'src/entities/message.entity';
+import { Transactional } from 'typeorm-transactional';
+import { MessageService } from '../message/message.service';
+import { getAttachmentType } from 'src/utils/fileType';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType } from 'src/entities/notification.entity';
 
 export type ChatRelation = 'participants' | 'participants.user' | 'lastMessage';
 
@@ -28,6 +33,8 @@ export class ChatService {
 		@InjectRepository(Message)
 		private readonly messageRepository: Repository<Message>,
 		private readonly userService: UserService,
+		private readonly messageService: MessageService,
+		private readonly notificationService: NotificationService,
 	) {}
 
 	async findParticipant(chatId: number, userId: number, type?: ChatType) {
@@ -154,6 +161,7 @@ export class ChatService {
 			where: {
 				chat: { id: chatId },
 				createdAt: LessThan(before),
+				deletedAt: IsNull(),
 			},
 			order: { createdAt: 'DESC' },
 			take: limit,
@@ -174,5 +182,108 @@ export class ChatService {
 		});
 	}
 
-	async addMessage({ chatId, userId, body, replyToId, files }: { chatId: number; userId: number; body: string; replyToId?: number; files?: any[] }) {}
+	async updateLastMessage(chatId: number, message: Message | null) {
+		const chat = await this.findById(chatId, true);
+		chat.lastMessage = message;
+		return this.chatRepository.save(chat);
+	}
+
+	@Transactional()
+	async addMessage({ chatId, userId, content, replyToId, files }: { chatId: number; userId: number; content?: string; replyToId?: number; files?: Express.Multer.File[] }) {
+		//chat id and user id was checked in guard
+		//check if replyTo message is exists
+		if (replyToId) {
+			await this.messageService.findById(replyToId); //auto throw error if message not found
+		}
+
+		const attachments =
+			files?.map((file) => ({
+				type: getAttachmentType(file),
+				fileName: file.filename,
+				fileSize: file.size,
+				fileType: file.mimetype,
+			})) || [];
+
+		let mentionedUsersIds: number[] = [];
+
+		//get mentioned users ids from content
+		if (content) {
+			mentionedUsersIds.push(...(content.match(/@(\d+)/g)?.map((id) => +id.slice(1)) || []));
+			if (content.includes('@all')) {
+				const chat = await this.findById(chatId, true);
+				mentionedUsersIds = chat.participants.map((participant) => participant.user.id).filter((id) => id !== userId);
+			}
+			mentionedUsersIds = [...new Set(mentionedUsersIds)];
+			mentionedUsersIds = mentionedUsersIds.filter((id) => id !== userId);
+			mentionedUsersIds = (await Promise.all(
+				mentionedUsersIds
+					.map(async (id) => {
+						if (await this.isParticipant(chatId, id).catch(() => false)) {
+							return id;
+						}
+						return null;
+					})
+					.filter((id) => id != null),
+			)) as number[];
+		}
+
+		const message = await this.messageService.create({ chatId, senderId: userId, content, replyToId, mentionedUsersIds, attachments });
+
+		//update last message in chat
+		await this.updateLastMessage(chatId, message);
+
+		//create notification for mentioned users
+		await Promise.all(
+			message.mentionedUsers.map((user) =>
+				this.notificationService.createNotification(
+					user,
+					{
+						type: NotificationType.MENTION,
+						message: message,
+					},
+					(user) => user.settings.notification.mention,
+				),
+			),
+		);
+
+		//create notification for replyTo message
+		if (message.replyTo) {
+			const replyToMessage = await this.messageService.findById(message.replyTo.id);
+			await this.notificationService.createNotification(
+				replyToMessage.sender,
+				{
+					type: NotificationType.REPLY,
+					message: message,
+				},
+				(user) => user.settings.notification.reply,
+			);
+		}
+
+		return message;
+	}
+
+	async deleteMessage({ chatId, messageId }: { chatId: number; messageId: number }) {
+		await this.messageRepository.softDelete(messageId);
+
+		await this.updateLastMessage(
+			chatId,
+			(await this.getMessages({ chatId, limit: 1 })
+				.catch(() => [])
+				.then((messages) => messages[0])) || null,
+		);
+
+		return true;
+	}
+
+	async seenMessage({ chatId, messageId, userId }: { chatId: number; messageId: number; userId: number }) {
+		const message = await this.messageService.findById(messageId);
+		await this.findById(chatId, true);
+		if (message.chat.id !== chatId) throw new BadRequestException('Message not found in this chat');
+		if (message.sender.id === userId) return true;
+		if (message.seenBy.some((seenBy) => seenBy.id === userId)) return true;
+
+		message.seenBy.push(await this.userService.findById(userId));
+		await this.messageRepository.save(message);
+		return true;
+	}
 }

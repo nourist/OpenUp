@@ -1,13 +1,13 @@
 import { Body, Controller, UseGuards, Post, Patch, Param, ParseIntPipe, Delete } from '@nestjs/common';
+import { instanceToPlain } from 'class-transformer';
+
 import { GroupService } from './group.service';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { JwtPayload } from 'src/types/jwt-payload.interface';
 import { GetUser } from 'src/decorators/get-user.decorator';
-import { instanceToPlain } from 'class-transformer';
 import { ChangeGroupInfoDto, CreateGroupDto, InviteToGroupDto } from './group.dto';
 import { InvitationService } from '../invitation/invitation.service';
-import { IsGroupAdminGuard, IsGroupOwnerGuard } from 'src/guards/group-role.guard';
-import { IsChatParticipantGuard } from 'src/guards/chat-participant.guard';
+import { IsGroupAdminGuard, IsGroupOwnerGuard, IsChatParticipantGuard } from 'src/guards/chat-role.guard';
 
 @Controller('group')
 export class GroupController {
