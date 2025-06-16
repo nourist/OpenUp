@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, LessThan, Not, Repository } from 'typeorm';
+import { IsNull, LessThan, Repository } from 'typeorm';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { User } from 'src/entities/user.entity';
@@ -15,7 +15,7 @@ import { NotificationType } from 'src/entities/notification.entity';
 
 export type ChatRelation = 'participants' | 'participants.user' | 'lastMessage';
 
-const getChatRelations = (relations: boolean | ChatRelation[]): ChatRelation[] => {
+export const getChatRelations = (relations: boolean | ChatRelation[]): ChatRelation[] => {
 	if (relations === true) return ['participants', 'participants.user', 'lastMessage'];
 	if (Array.isArray(relations)) return relations;
 	return [];
@@ -157,7 +157,7 @@ export class ChatService {
 		limit = limit ?? 50; //default limit is 50 messages
 
 		//get messages before before date, order by createdAt DESC, take limit messages
-		return this.messageRepository.find({
+		const messages = await this.messageRepository.find({
 			where: {
 				chat: { id: chatId },
 				createdAt: LessThan(before),
@@ -167,6 +167,10 @@ export class ChatService {
 			take: limit,
 			relations: ['sender', 'attachments', 'replyTo', 'mentionedUsers', 'reactions', 'seenBy'],
 		});
+
+		this.logger.log(`Get ${messages.length} messages from chat ${chatId}`);
+
+		return messages;
 	}
 
 	async getUnreadMessagesCount(chatId: number, userId: number) {
@@ -174,12 +178,17 @@ export class ChatService {
 		await this.findById(chatId, true);
 		await this.userService.findById(userId);
 
-		return this.messageRepository.count({
-			where: {
-				chat: { id: chatId },
-				seenBy: { id: Not(userId) },
-			},
-		});
+		return this.messageRepository
+			.createQueryBuilder('message')
+			.leftJoin('message.seenBy', 'seenBy')
+			.where('message.chatId = :chatId', { chatId })
+			.andWhere('message.senderId != :userId', { userId })
+			.andWhere('message.deletedAt IS NULL')
+			.andWhere((qb) => {
+				const subQuery = qb.subQuery().select('msg.id').from(Message, 'msg').leftJoin('msg.seenBy', 'sb').where('sb.id = :userId').getQuery();
+				return 'message.id NOT IN ' + subQuery;
+			})
+			.getCount();
 	}
 
 	async updateLastMessage(chatId: number, message: Message | null) {
@@ -194,6 +203,10 @@ export class ChatService {
 		//check if replyTo message is exists
 		if (replyToId) {
 			await this.messageService.findById(replyToId); //auto throw error if message not found
+		}
+
+		if (!content && !files?.length) {
+			throw new BadRequestException('Content or files are required');
 		}
 
 		const attachments =
@@ -229,8 +242,12 @@ export class ChatService {
 
 		const message = await this.messageService.create({ chatId, senderId: userId, content, replyToId, mentionedUsersIds, attachments });
 
+		this.logger.log(`Message ${message.id} created in chat ${chatId}`);
+
 		//update last message in chat
 		await this.updateLastMessage(chatId, message);
+
+		this.logger.log(`Last message in chat ${chatId} updated to ${message.id}`);
 
 		//create notification for mentioned users
 		await Promise.all(
@@ -246,6 +263,8 @@ export class ChatService {
 			),
 		);
 
+		this.logger.log(`Notification for mentioned users created`);
+
 		//create notification for replyTo message
 		if (message.replyTo) {
 			const replyToMessage = await this.messageService.findById(message.replyTo.id);
@@ -257,13 +276,16 @@ export class ChatService {
 				},
 				(user) => user.settings.notification.reply,
 			);
+			this.logger.log(`Notification for replyTo message created`);
 		}
 
 		return message;
 	}
 
+	@Transactional()
 	async deleteMessage({ chatId, messageId }: { chatId: number; messageId: number }) {
 		await this.messageRepository.softDelete(messageId);
+		this.logger.log(`Message ${messageId} deleted`);
 
 		await this.updateLastMessage(
 			chatId,
@@ -272,18 +294,25 @@ export class ChatService {
 				.then((messages) => messages[0])) || null,
 		);
 
+		this.logger.log(`Last message in chat ${chatId} updated`);
+
 		return true;
 	}
 
 	async seenMessage({ chatId, messageId, userId }: { chatId: number; messageId: number; userId: number }) {
 		const message = await this.messageService.findById(messageId);
 		await this.findById(chatId, true);
-		if (message.chat.id !== chatId) throw new BadRequestException('Message not found in this chat');
+		if (message.chat.id !== chatId) {
+			this.logger.log(`Message ${messageId} not found in chat ${chatId}`);
+			throw new BadRequestException('Message not found in this chat');
+		}
+
 		if (message.sender.id === userId) return true;
 		if (message.seenBy.some((seenBy) => seenBy.id === userId)) return true;
 
 		message.seenBy.push(await this.userService.findById(userId));
 		await this.messageRepository.save(message);
+		this.logger.log(`Message ${messageId} seen by user ${userId}`);
 		return true;
 	}
 }

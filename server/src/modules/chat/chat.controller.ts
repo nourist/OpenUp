@@ -18,7 +18,7 @@ export class ChatController {
 	constructor(private readonly chatService: ChatService) {}
 
 	@Patch(':chatId/mute')
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
 	async muteChat(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Chat muted',
@@ -27,7 +27,7 @@ export class ChatController {
 	}
 
 	@Patch(':chatId/unmute')
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
 	async unmuteChat(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Chat unmuted',
@@ -36,7 +36,7 @@ export class ChatController {
 	}
 
 	@Patch(':chatId/pin')
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
 	async pinChat(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Chat pinned',
@@ -45,7 +45,7 @@ export class ChatController {
 	}
 
 	@Patch(':chatId/unpin')
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
 	async unpinChat(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {
 			message: 'Chat unpinned',
@@ -54,11 +54,11 @@ export class ChatController {
 	}
 
 	@Patch(':chatId/nickname')
-	@UseGuards(JwtAuthGuard)
-	async changeNickname(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Body() body: ChangeNicknameDto) {
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
+	async changeNickname(@Param('chatId', ParseIntPipe) chatId: number, @Body() body: ChangeNicknameDto) {
 		return {
 			message: 'Chat nickname changed',
-			participant: instanceToPlain(await this.chatService.changeNickname({ chatId, userId: user.sub, nickname: body.nickname })),
+			participant: instanceToPlain(await this.chatService.changeNickname({ chatId, ...body })),
 		};
 	}
 

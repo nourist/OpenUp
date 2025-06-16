@@ -2,6 +2,10 @@ import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min
 
 export class ChangeNicknameDto {
 	@IsNotEmpty()
+	@IsNumber()
+	userId: number;
+
+	@IsNotEmpty()
 	@IsString()
 	@MaxLength(255)
 	nickname: string;

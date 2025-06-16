@@ -37,7 +37,7 @@ export class AuthService {
 	}
 
 	async signup(userData: Partial<User>) {
-		const isUserExists = await this.userService.findByEmail(userData.email!, true);
+		const isUserExists = await this.userService.checkEmailExists(userData.email!);
 		if (isUserExists) {
 			this.logger.log(`User ${userData.email} already exists`);
 			throw new BadRequestException('User already exists');
@@ -46,7 +46,7 @@ export class AuthService {
 		const hashedPassword = bcrypt.hashSync(userData.password!, 10);
 		const user = this.userRepository.create({ ...userData, password: hashedPassword });
 
-		this.logger.log(`User ${user.id} created with email ${user.email}`);
+		this.logger.log(`User created with email ${user.email}`);
 		return await this.userRepository.save(user);
 	}
 

@@ -43,7 +43,7 @@ export class GroupController {
 		};
 	}
 
-	@Delete(':chatId/invite/:invitationId/cancel')
+	@Delete(':chatId/invite/:invitationId')
 	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
 	async cancelInvitation(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Param('invitationId', ParseIntPipe) invitationId: number) {
 		return {
@@ -52,21 +52,21 @@ export class GroupController {
 		};
 	}
 
-	@Patch(':chatId/invite/:invitationId/accept')
+	@Patch('invite/:invitationId/accepted')
 	@UseGuards(JwtAuthGuard)
-	async acceptInvitation(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Param('invitationId', ParseIntPipe) invitationId: number) {
+	async acceptInvitation(@GetUser() user: JwtPayload, @Param('invitationId', ParseIntPipe) invitationId: number) {
 		return {
 			message: 'Invitation accepted',
-			invitation: instanceToPlain(await this.groupService.replyInvitation({ chatId, invitationId, accepted: true })),
+			invitation: instanceToPlain(await this.groupService.replyInvitation({ invitationId, accepted: true })),
 		};
 	}
 
-	@Patch(':chatId/invite/:invitationId/reject')
+	@Patch('invite/:invitationId/rejected')
 	@UseGuards(JwtAuthGuard)
-	async rejectInvitation(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Param('invitationId', ParseIntPipe) invitationId: number) {
+	async rejectInvitation(@GetUser() user: JwtPayload, @Param('invitationId', ParseIntPipe) invitationId: number) {
 		return {
 			message: 'Invitation rejected',
-			invitation: instanceToPlain(await this.groupService.replyInvitation({ chatId, invitationId, accepted: false })),
+			invitation: instanceToPlain(await this.groupService.replyInvitation({ invitationId, accepted: false })),
 		};
 	}
 
@@ -160,16 +160,16 @@ export class GroupController {
 		};
 	}
 
-	@Post(':chatId/join/:inviteUUID')
+	@Post('join/:inviteUUID')
 	@UseGuards(JwtAuthGuard)
-	async joinGroup(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @Param('inviteUUID') inviteUUID: string) {
+	async joinGroup(@GetUser() user: JwtPayload, @Param('inviteUUID') inviteUUID: string) {
 		return {
 			message: 'Group joined',
-			chat: instanceToPlain(await this.groupService.joinGroupByUUID(user.sub, { chatId, inviteUUID })),
+			chat: instanceToPlain(await this.groupService.joinGroupByUUID(user.sub, inviteUUID)),
 		};
 	}
 
-	@Post(':chatId/leave')
+	@Delete(':chatId/leave')
 	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
 	async leaveGroup(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number) {
 		return {

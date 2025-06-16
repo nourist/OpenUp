@@ -53,6 +53,11 @@ export class UserService {
 		private readonly userRepository: Repository<User>,
 	) {}
 
+	async checkEmailExists(email: string) {
+		const user = await this.userRepository.findOne({ where: { email } });
+		return !!user;
+	}
+
 	async findByEmail(email: string, relations: boolean | UserRelation[] = false) {
 		//false: no relations, true: all relations, array: specific relations
 		const user = await this.userRepository.findOne({

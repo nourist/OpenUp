@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { Transactional } from 'typeorm-transactional';
 
@@ -11,6 +11,7 @@ import { NotificationType } from 'src/entities/notification.entity';
 import { ChatService } from '../chat/chat.service';
 import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
+import { getChatRelations } from '../chat/chat.service';
 
 @Injectable()
 export class GroupService {
@@ -107,8 +108,9 @@ export class GroupService {
 		await this.notificationService.createNotification(to, { type: NotificationType.INVITATION, invitation: savedInvitation }, (to) => to.settings.notification.groupInvitation);
 		this.logger.log(`Invitation sent to ${to.id} from ${from.id} for group ${group.id}`);
 
-		group.invitations.push(savedInvitation);
-		return this.chatRepository.save(group);
+		// group.invitations.push(savedInvitation);
+		// return this.chatRepository.save(group);
+		return savedInvitation;
 	}
 
 	async addMember(chatId: number, userId: number) {
@@ -164,30 +166,34 @@ export class GroupService {
 	}
 
 	@Transactional()
-	async replyInvitation({ chatId, invitationId, accepted }: { chatId: number; invitationId: number; accepted: boolean }) {
-		await this.chatService.findById(chatId, true, ChatType.GROUP); //check if group exists
-		const invitation = await this.invitationRepository.findOne({ where: { id: invitationId, group: { id: chatId }, status: InvitationStatus.PENDING } });
+	async replyInvitation({ invitationId, accepted }: { invitationId: number; accepted: boolean }) {
+		const invitation = await this.invitationRepository.findOne({
+			where: { id: invitationId, status: InvitationStatus.PENDING, type: InvitationType.GROUP },
+			relations: ['group', 'to', 'from'],
+		});
 
 		if (!invitation) {
+			this.logger.log(`Invitation ${invitationId} not found`);
 			throw new BadRequestException('Invitation not found');
 		}
 
 		if (accepted) {
 			//add member to group if accepted
-			await this.addMember(chatId, invitation.to.id);
+			this.logger.log(`Adding member ${invitation.to.id} to group ${invitation.group!.id}`);
+			await this.addMember(invitation.group!.id, invitation.to.id);
 
 			invitation.status = InvitationStatus.ACCEPTED;
 		} else {
 			invitation.status = InvitationStatus.REJECTED;
 		}
 
-		this.logger.log(`Invitation ${invitationId} ${accepted ? 'accepted' : 'rejected'} for group ${chatId}`);
+		this.logger.log(`Invitation ${invitationId} ${accepted ? 'accepted' : 'rejected'} for group ${invitation.group!.id}`);
 
 		const savedInvitation = await this.invitationRepository.save(invitation);
 
 		await this.notificationService.createNotification(
 			invitation.from,
-			{ type: NotificationType.INVITATION, invitation: savedInvitation },
+			{ type: NotificationType.INVITATION_REPLY, invitation: savedInvitation },
 			(from) => from.settings.notification.groupInvitationReply,
 		);
 
@@ -286,14 +292,27 @@ export class GroupService {
 			throw new BadRequestException('Invite UUID is not enabled for this group');
 		}
 
+		if (!group.inviteUUID) {
+			throw new BadRequestException('Invite UUID is not generated for this group');
+		}
+
 		group.inviteUUIDExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3); //3 days
 
 		this.logger.log(`Invite UUID extended for group ${chatId}`);
+
+		return this.chatRepository.save(group);
 	}
 
 	@Transactional()
-	async joinGroupByUUID(userId: number, { chatId, inviteUUID }: { chatId: number; inviteUUID: string }) {
-		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
+	async joinGroupByUUID(userId: number, inviteUUID: string) {
+		const group = await this.chatRepository.findOne({
+			where: { inviteUUID, type: ChatType.GROUP, inviteUUIDExpiresAt: MoreThan(new Date()) },
+			relations: getChatRelations(true),
+		});
+
+		if (!group) {
+			throw new BadRequestException('Invalid invite UUID');
+		}
 
 		if (!group.allowInviteUUID) {
 			throw new BadRequestException('Invite UUID is not enabled for this group');
@@ -307,7 +326,7 @@ export class GroupService {
 			throw new BadRequestException('Invite UUID has expired');
 		}
 
-		this.logger.log(`User ${userId} joined group ${chatId} by invite UUID`);
-		return await this.addMember(chatId, userId);
+		this.logger.log(`User ${userId} joined group ${group.id} by invite UUID`);
+		return await this.addMember(group.id, userId);
 	}
 }
