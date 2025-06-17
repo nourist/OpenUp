@@ -4,6 +4,7 @@
 		"paths": {
 			"~/*": ["src/*"]
 		},
+		"types": ["vite/client"],
 
 		"target": "ES2020",
 		"useDefineForClassFields": true,

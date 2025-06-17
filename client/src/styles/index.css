@@ -11,9 +11,23 @@
 	--color-neutral: oklch(0.1038 0.0652 275.09);
 	--color-neutral-content: oklch(1 0 0);
 
+	--color-primary-50: oklch(0.95 0.05 30.42);
+	--color-primary-100: oklch(0.9 0.1 30.42);
 	--color-primary: oklch(0.6929 0.2064 30.42);
+	--color-primary-600: oklch(0.6 0.2064 30.42);
+	--color-primary-700: oklch(0.5 0.2064 30.42);
+
+	--color-secondary-50: oklch(0.95 0.05 354.308);
+	--color-secondary-100: oklch(0.9 0.1 354.308);
 	--color-secondary: oklch(0.65 0.241 354.308);
+	--color-secondary-600: oklch(0.6 0.241 354.308);
+	--color-secondary-700: oklch(0.5 0.241 354.308);
+
+	--color-accent-50: oklch(0.95 0.05 211.53);
+	--color-accent-100: oklch(0.9 0.1 211.53);
 	--color-accent: oklch(0.78 0.154 211.53);
+	--color-accent-600: oklch(0.7 0.154 211.53);
+	--color-accent-700: oklch(0.5 0.154 211.53);
 
 	--color-info: oklch(74% 0.16 232.661);
 	--color-info-content: oklch(29% 0.066 243.157);
@@ -26,6 +40,8 @@
 
 	--color-error: oklch(71% 0.194 13.428);
 	--color-error-content: oklch(27% 0.105 12.094);
+
+	--animate-float: float 3s ease-in-out infinite;
 }
 
 @layer theme {
@@ -91,4 +107,14 @@ button {
 
 button {
 	@apply disabled:pointer-events-none disabled:opacity-50;
+}
+
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-10px);
+	}
 }
