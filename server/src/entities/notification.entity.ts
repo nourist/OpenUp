@@ -3,12 +3,14 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { User } from './user.entity';
 import { Invitation } from './invitation.entity';
 import { Message } from './message.entity';
+import { MessageReaction } from './message-reaction.entity';
 
 export enum NotificationType {
 	MENTION = 'mention',
 	REPLY = 'reply',
 	INVITATION = 'invitation',
 	INVITATION_REPLY = 'invitation_reply',
+	REACTION = 'reaction',
 }
 
 @Entity('notifications')
@@ -27,6 +29,9 @@ export class Notification {
 
 	@ManyToOne(() => Message, { nullable: true, onDelete: 'CASCADE' })
 	message?: Message | null;
+
+	@ManyToOne(() => MessageReaction, { nullable: true, onDelete: 'CASCADE' })
+	reaction?: MessageReaction | null;
 
 	@ManyToOne(() => User, (user) => user.notifications, { onDelete: 'CASCADE' })
 	user: User;

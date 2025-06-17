@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { getAttachmentType } from 'src/utils/fileType';
+import { Transactional } from 'typeorm-transactional';
 
+import { getAttachmentType } from 'src/utils/fileType';
 import { Message } from 'src/entities/message.entity';
 import { MessageAttachment } from 'src/entities/message-attachment.entity';
+import { MessageReaction, ReactionEnum } from 'src/entities/message-reaction.entity';
 
 @Injectable()
 export class MessageService {
@@ -13,6 +15,8 @@ export class MessageService {
 		private readonly messageRepository: Repository<Message>,
 		@InjectRepository(MessageAttachment)
 		private readonly attachmentRepository: Repository<MessageAttachment>,
+		@InjectRepository(MessageReaction)
+		private readonly messageReactionRepository: Repository<MessageReaction>,
 	) {}
 
 	async findById(id: number) {
@@ -62,6 +66,20 @@ export class MessageService {
 			mentionedUsers: mentionedUsersIds.map((id) => ({ id })),
 			attachments: this.filesToAttachments(files),
 		});
+		return this.messageRepository.save(message);
+	}
+
+	@Transactional()
+	async react({ messageId, userId, emoji }: { messageId: number; userId: number; emoji: ReactionEnum }) {
+		const message = await this.findById(messageId);
+
+		const reaction = message.reactions.find((reaction) => reaction.user.id === userId);
+		if (reaction) {
+			reaction.emoji = emoji;
+		} else {
+			message.reactions.push(this.messageReactionRepository.create({ message, user: { id: userId }, emoji }));
+		}
+
 		return this.messageRepository.save(message);
 	}
 }

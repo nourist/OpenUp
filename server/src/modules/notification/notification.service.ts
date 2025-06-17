@@ -8,6 +8,7 @@ import { User } from 'src/entities/user.entity';
 import { Invitation } from 'src/entities/invitation.entity';
 import { Message } from 'src/entities/message.entity';
 import { UserService } from '../user/user.service';
+import { MessageReaction } from 'src/entities/message-reaction.entity';
 
 type NotificationRelation = 'user' | 'invitation';
 
@@ -47,6 +48,7 @@ export class NotificationService {
 			type: NotificationType;
 			invitation?: Invitation;
 			message?: Message;
+			reaction?: MessageReaction;
 		},
 		checker: (to: User) => boolean,
 	) {
@@ -57,6 +59,7 @@ export class NotificationService {
 				type: notification.type,
 				invitation: notification.invitation,
 				message: notification.message,
+				reaction: notification.reaction,
 			});
 
 			await this.notificationRepository.save(newNotification);

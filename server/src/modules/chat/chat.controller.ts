@@ -8,7 +8,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { ChatService } from './chat.service';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { JwtPayload } from 'src/types/jwt-payload.interface';
-import { AddMessageDto, ChangeNicknameDto, EditMessageDto, GetMessagesDto } from './chat.dto';
+import { AddMessageDto, ChangeNicknameDto, EditMessageDto, GetMessagesDto, AddReactionDto } from './chat.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { IsChatParticipantGuard, IsMessageSenderGuard } from 'src/guards/chat-role.guard';
 import { fileFilter } from 'src/utils/fileType';
@@ -119,7 +119,7 @@ export class ChatController {
 	) {
 		return {
 			message: 'Message edited',
-			success: await this.chatService.editMessage({ messageId, ...body }),
+			success: await this.chatService.editMessage({ messageId, chatId, ...body }),
 		};
 	}
 
@@ -129,6 +129,20 @@ export class ChatController {
 		return {
 			message: 'Message seen',
 			success: await this.chatService.seenMessage({ chatId, messageId, userId: user.sub }),
+		};
+	}
+
+	@Post(':chatId/message/:messageId/react')
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
+	async reactMessage(
+		@GetUser() user: JwtPayload,
+		@Param('chatId', ParseIntPipe) chatId: number,
+		@Param('messageId', ParseIntPipe) messageId: number,
+		@Body() body: AddReactionDto,
+	) {
+		return {
+			message: 'Reaction added',
+			success: await this.chatService.reactMessage({ chatId, messageId, userId: user.sub, ...body }),
 		};
 	}
 }

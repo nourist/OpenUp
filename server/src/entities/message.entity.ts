@@ -43,7 +43,7 @@ export class Message {
 	@JoinTable()
 	mentionedUsers: User[];
 
-	@OneToMany(() => MessageReaction, (reaction) => reaction.message)
+	@OneToMany(() => MessageReaction, (reaction) => reaction.message, { cascade: true })
 	reactions: MessageReaction[];
 
 	@ManyToMany(() => User)

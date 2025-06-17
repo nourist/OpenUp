@@ -1,5 +1,7 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
+
+import { ReactionEnum } from 'src/entities/message-reaction.entity';
 
 export class ChangeNicknameDto {
 	@IsNotEmpty()
@@ -57,4 +59,10 @@ export class EditMessageDto {
 	@IsOptional()
 	@IsBoolean()
 	removeReplyTo?: boolean;
+}
+
+export class AddReactionDto {
+	@IsNotEmpty()
+	@IsEnum(ReactionEnum)
+	emoji: ReactionEnum;
 }

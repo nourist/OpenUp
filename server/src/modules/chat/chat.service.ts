@@ -11,6 +11,7 @@ import { Transactional } from 'typeorm-transactional';
 import { MessageService } from '../message/message.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from 'src/entities/notification.entity';
+import { ReactionEnum } from 'src/entities/message-reaction.entity';
 
 export type ChatRelation = 'participants' | 'participants.user' | 'lastMessage';
 
@@ -271,12 +272,14 @@ export class ChatService {
 	@Transactional()
 	async editMessage({
 		messageId,
+		chatId,
 		content,
 		files,
 		attachments,
 		removeReplyTo,
 	}: {
 		messageId: number;
+		chatId: number;
 		content?: string;
 		files?: Express.Multer.File[];
 		attachments?: { id: number }[];
@@ -286,6 +289,10 @@ export class ChatService {
 		//sender id was checked in guard
 
 		const message = await this.messageService.findById(messageId);
+
+		if (message.chat.id !== chatId) {
+			throw new BadRequestException('Message not found in this chat');
+		}
 
 		//mark message as edited
 		message.isEdited = true;
@@ -349,6 +356,37 @@ export class ChatService {
 		message.seenBy.push(await this.userService.findById(userId));
 		await this.messageRepository.save(message);
 		this.logger.log(`Message ${messageId} seen by user ${userId}`);
+		return true;
+	}
+
+	async reactMessage({ chatId, messageId, userId, emoji }: { chatId: number; messageId: number; userId: number; emoji: ReactionEnum }) {
+		const message = await this.messageService.findById(messageId);
+
+		if (message.sender.id === userId) {
+			throw new BadRequestException('You cannot react to your own message');
+		}
+
+		if (message.chat.id !== chatId) {
+			this.logger.log(`Message ${messageId} not found in chat ${chatId}`);
+			throw new BadRequestException('Message not found in this chat');
+		}
+
+		await this.messageService.react({ messageId, userId, emoji });
+
+		this.logger.log(`Message ${messageId} reacted by user ${userId} with emoji ${emoji}`);
+
+		await this.notificationService.createNotification(
+			message.sender,
+			{
+				type: NotificationType.REACTION,
+				message,
+				reaction: message.reactions.find((reaction) => reaction.user.id === userId),
+			},
+			(user) => user.settings.notification.reaction,
+		);
+
+		this.logger.log(`Notification for reaction created for user ${message.sender.id}`);
+
 		return true;
 	}
 }
