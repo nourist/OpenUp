@@ -45,61 +45,63 @@ const Signin = () => {
 				className="bg-base-100 flex aspect-video h-[calc(100%-130px)] max-w-[calc(100%-64px)] rounded-4xl shadow-lg"
 			>
 				<AbstractGradientShape className="hidden w-1/2 rounded-tl-4xl md:block" />
-				<form onSubmit={handleSubmit(onSubmit)} className="w-full p-10 md:w-1/2">
-					<h1 className="font mb-10 text-3xl flex items-center gap-2">
-						<Link to="/">
-							<Logo />
-						</Link>
-						{t('sign-in').capitalize()}
-					</h1>
+				<div className="w-full p-10 md:w-1/2">
+					<form onSubmit={handleSubmit(onSubmit)}>
+						<h1 className="font mb-10 text-3xl flex items-center gap-2">
+							<Link to="/">
+								<Logo />
+							</Link>
+							{t('sign-in').capitalize()}
+						</h1>
 
-					<label htmlFor="email" className="text-sm font-semibold capitalize">
-						{t('email')}
-					</label>
-					<input
-						id="email"
-						{...register('email', {
-							required: { value: true, message: 'email-required-msg' },
-							pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'invalid-email-msg' },
-						})}
-						className={`input mt-1 placeholder:capitalize ${errors.email && 'text-error'}`}
-						placeholder={t('email')}
-					/>
-					<div data-hide={!errors.email} className="text-xs text-error mb-1 mt-0.5 flex items-center gap-1 font-medium h-4 data-[hide=true]:opacity-0">
-						<CircleAlert size={12} strokeWidth={2.5} />
-						{errors.email?.message && t(errors.email?.message).capitalize()}
-					</div>
+						<label htmlFor="email" className="text-sm font-semibold capitalize">
+							{t('email')}
+						</label>
+						<input
+							id="email"
+							{...register('email', {
+								required: { value: true, message: 'email-required-msg' },
+								pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'invalid-email-msg' },
+							})}
+							className={`input mt-1 placeholder:capitalize ${errors.email && 'text-error'}`}
+							placeholder={t('email')}
+						/>
+						<div data-hide={!errors.email} className="text-xs text-error mb-1 mt-0.5 flex items-center gap-1 font-medium h-4 data-[hide=true]:opacity-0">
+							<CircleAlert size={12} strokeWidth={2.5} />
+							{errors.email?.message && t(errors.email?.message).capitalize()}
+						</div>
 
-					<label htmlFor="password" className="text-sm font-semibold capitalize">
-						{t('password')}
-					</label>
-					<input
-						id="password"
-						type="password"
-						{...register('password', { required: { value: true, message: 'password-required-msg' } })}
-						className={`input mt-1 placeholder:capitalize ${errors.password && 'text-error'}`}
-						placeholder={t('password')}
-					/>
-					<div data-hide={!errors.password} className="text-xs text-error mb-1 mt-0.5 flex items-center gap-1 font-medium h-4 data-[hide=true]:opacity-0">
-						<CircleAlert size={12} strokeWidth={2.5} />
-						{errors.password?.message && t(errors.password?.message).capitalize()}
-					</div>
+						<label htmlFor="password" className="text-sm font-semibold capitalize">
+							{t('password')}
+						</label>
+						<input
+							id="password"
+							type="password"
+							{...register('password', { required: { value: true, message: 'password-required-msg' } })}
+							className={`input mt-1 placeholder:capitalize ${errors.password && 'text-error'}`}
+							placeholder={t('password')}
+						/>
+						<div data-hide={!errors.password} className="text-xs text-error mb-1 mt-0.5 flex items-center gap-1 font-medium h-4 data-[hide=true]:opacity-0">
+							<CircleAlert size={12} strokeWidth={2.5} />
+							{errors.password?.message && t(errors.password?.message).capitalize()}
+						</div>
 
-					<button
-						disabled={isSubmitting}
-						type="submit"
-						className="from-primary to-secondary mt-8 h-10 w-full rounded-full bg-gradient-to-r font-bold text-neutral-content capitalize hover:shadow-lg"
-					>
-						{t('sign-in')}
-					</button>
-					<div className="text-base-content/80 my-5 flex justify-center gap-1 text-sm">
-						<p>{t('dont-have-an-account').capitalize()}?</p>
-						<Link to="/signup" className="text-primary font-medium capitalize hover:underline">
-							{t('sign-up')}
-						</Link>
-					</div>
+						<button
+							disabled={isSubmitting}
+							type="submit"
+							className="from-primary to-secondary mt-8 h-10 w-full rounded-full bg-gradient-to-r font-bold text-neutral-content capitalize hover:shadow-lg"
+						>
+							{t('sign-in')}
+						</button>
+						<div className="text-base-content/80 my-5 flex justify-center gap-1 text-sm">
+							<p>{t('dont-have-an-account').capitalize()}?</p>
+							<Link to="/signup" className="text-primary font-medium capitalize hover:underline">
+								{t('sign-up')}
+							</Link>
+						</div>
+					</form>
 					<GoogleSigninButton />
-				</form>
+				</div>
 			</motion.div>
 		</div>
 	);
