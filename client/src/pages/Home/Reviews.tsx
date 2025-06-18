@@ -59,7 +59,7 @@ const Reviews = () => {
 					{testimonials.map((testimonial, index) => (
 						<div
 							key={testimonial.name}
-							className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-300 hover:shadow-lg transition-all duration-300 animate-fade-in"
+							className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-300 hover:shadow-lg transition-all duration-300"
 							style={{ animationDelay: `${index * 0.1}s` }}
 						>
 							<div className="flex items-center justify-between mb-4">

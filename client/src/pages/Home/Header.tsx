@@ -12,7 +12,7 @@ const Header = () => {
 
 	return (
 		<header className="fixed backdrop-blur-lg bg-base-100/70 z-50 flex-center top-0 left-0 right-0 h-16 border-b border-base-300">
-			<div className="flex items-center justify-between flex-1 gap-1 max-w-7xl text-sm mx-8 lg:px-6">
+			<div className="flex items-center justify-between flex-1 gap-1 max-w-7xl text-sm px-8 lg:px-14">
 				<Logo />
 				<h1 className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary ml-1 text-2xl font-bold">OpenUp</h1>
 				<div className="text-base-content/80 mx-auto hidden lg:space-x-12 space-x-10 font-medium md:block">

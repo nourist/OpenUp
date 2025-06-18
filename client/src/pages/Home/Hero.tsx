@@ -14,7 +14,7 @@ const Hero = () => {
 			<div className="container mx-auto px-4 lg:px-8">
 				<div className="grid lg:grid-cols-2 gap-12 items-center">
 					{/* Left Column - Content */}
-					<div className="space-y-8 animate-fade-in text-center">
+					<div className="space-y-8 text-center">
 						<div className="space-y-4">
 							<div className="inline-flex items-center space-x-2 bg-base-200 rounded-full px-4 py-2 border border-base-300">
 								<div className="w-2 h-2 bg-error rounded-full animate-pulse"></div>
@@ -26,7 +26,7 @@ const Hero = () => {
 								<span className="block text-transparent bg-gradient-to-r from-primary to-secondary bg-clip-text">{t('authentically')}</span>
 							</h1>
 
-							<p className="text-base-content/70 my-8 max-w-xl leading-relaxed">{t('description').capitalize()}</p>
+							<p className="text-base-content/80 mb-10 mt-6 max-w-xl leading-relaxed">{t('description').capitalize()}</p>
 						</div>
 
 						{/* Stats */}
@@ -65,7 +65,7 @@ const Hero = () => {
 					</div>
 
 					{/* Right Column - Chat Preview */}
-					<div className="animate-slide-in">
+					<div>
 						<ChatPreview />
 					</div>
 				</div>

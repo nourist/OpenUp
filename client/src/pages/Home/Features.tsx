@@ -4,27 +4,27 @@ import { useTranslation } from 'react-i18next';
 const features = [
 	{
 		icon: Zap,
-		color: 'bg-primary',
+		color: 'from-primary to-primary-600',
 	},
 	{
 		icon: Shield,
-		color: 'bg-accent',
+		color: 'from-accent to-accent-600',
 	},
 	{
 		icon: Heart,
-		color: 'bg-secondary',
+		color: 'from-secondary to-secondary-600',
 	},
 	{
 		icon: Database,
-		color: 'bg-success',
+		color: 'from-success to-success-600',
 	},
 	{
 		icon: Palette,
-		color: 'bg-error',
+		color: 'from-error to-error-600',
 	},
 	{
 		icon: Globe,
-		color: 'bg-info',
+		color: 'from-info to-info-600',
 	},
 ];
 
@@ -46,10 +46,12 @@ const Features = () => {
 					{features.map((feature, index) => (
 						<div
 							key={index}
-							className="group p-6 bg-base-200/50 backdrop-blur-sm rounded-2xl border border-base-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+							className="group p-6 bg-base-200/50 backdrop-blur-sm rounded-2xl border border-base-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
 							style={{ animationDelay: `${index * 0.1}s` }}
 						>
-							<div className={`w-12 h-12 ${feature.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+							<div
+								className={`w-12 h-12 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
+							>
 								<feature.icon className="w-6 h-6 text-white" />
 							</div>
 

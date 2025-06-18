@@ -1,12 +1,16 @@
 import { useTranslation } from 'react-i18next';
 
-const Navbar = () => {
+interface NavbarProps {
+	className?: string;
+}
+
+const Navbar = ({ className }: NavbarProps) => {
 	const { t } = useTranslation('home');
 
 	return (
 		<>
 			<button
-				className="hover:text-base-content capitalize"
+				className={`hover:text-base-content capitalize ${className}`}
 				onClick={() =>
 					window.scrollTo({
 						left: 0,
@@ -18,7 +22,7 @@ const Navbar = () => {
 				{t('home')}
 			</button>
 			<button
-				className="hover:text-base-content capitalize"
+				className={`hover:text-base-content capitalize ${className}`}
 				onClick={() =>
 					window.scrollTo({
 						top: (document.getElementById('features-point')?.getBoundingClientRect().top || 0) + window.pageYOffset - 64,
@@ -29,7 +33,7 @@ const Navbar = () => {
 				{t('features')}
 			</button>
 			<button
-				className="hover:text-base-content capitalize"
+				className={`hover:text-base-content capitalize ${className}`}
 				onClick={() =>
 					window.scrollTo({
 						top: (document.getElementById('pricing-point')?.getBoundingClientRect().top || 0) + window.pageYOffset - 100,
@@ -40,7 +44,7 @@ const Navbar = () => {
 				{t('pricing')}
 			</button>
 			<button
-				className="hover:text-base-content capitalize"
+				className={`hover:text-base-content capitalize ${className}`}
 				onClick={() =>
 					window.scrollTo({
 						top: (document.getElementById('reviews-point')?.getBoundingClientRect().top || 0) + window.pageYOffset - 64,
@@ -51,7 +55,7 @@ const Navbar = () => {
 				{t('reviews')}
 			</button>
 			<button
-				className="hover:text-base-content capitalize"
+				className={`hover:text-base-content capitalize ${className}`}
 				onClick={() =>
 					document.getElementById('footer-point')?.scrollIntoView({
 						behavior: 'smooth',

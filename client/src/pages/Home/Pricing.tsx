@@ -5,7 +5,7 @@ const Pricing = () => {
 	const { t } = useTranslation('home');
 
 	return (
-		<section id="pricing" className="py-20 bg-gradient-to-br from-secondary-50/50 via-accent-50 to-primary-50">
+		<section id="pricing" className="py-20 bg-gradient-to-br from-secondary-50/75 via-accent-50 to-primary-50/75">
 			<div className="container mx-auto px-4 lg:px-8">
 				<div className="text-center max-w-3xl mx-auto mb-16">
 					<h2 id="pricing-point" className="text-3xl md:text-4xl font-bold text-base-content mb-4">
@@ -20,7 +20,7 @@ const Pricing = () => {
 					<div className="relative">
 						{/* Popular Badge */}
 						<div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-							<div className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
+							<div className="bg-gradient-to-r capitalize from-primary to-secondary text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
 								✨ {t('always-free')}
 							</div>
 						</div>

@@ -31,14 +31,12 @@ const Footer = () => {
 						</a>
 					</p>
 				</div>
-				<Navbar />
+				<Navbar className="hidden md:block" />
 				<a href="https://github.com/nourist/OpenUp" className="hover:text-base-content capitalize">
 					<Github className="size-5" />
 				</a>
 			</div>
-			<div className="w-full py-6 text-base-content/80 border-t border-base-content/20 border text-center text-[15px]">
-				©2025 Nourist. {t('all-rights-reserved').capitalize()}.
-			</div>
+			<div className="w-full py-6 text-base-content/80 border-t border-base-content/20 text-center text-[15px]">©2025 Nourist. {t('all-rights-reserved').capitalize()}.</div>
 		</footer>
 	);
 };

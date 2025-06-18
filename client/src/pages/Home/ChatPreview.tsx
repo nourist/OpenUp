@@ -25,14 +25,14 @@ export function ChatPreview() {
 				{/* Messages */}
 				<div className="space-y-3 h-64 overflow-hidden">
 					{/* Hardcoded message 1 (other) */}
-					<div className="flex justify-start animate-fade-in" style={{ animationDelay: `0s` }}>
+					<div className="flex justify-start" style={{ animationDelay: `0s` }}>
 						<div className="max-w-xs px-4 py-2 rounded-2xl bg-base-200 text-base-content rounded-bl-md">
 							<p className="text-sm">{t('msg-preview-1')}</p>
 							<p className="text-xs mt-1 text-base-content/50">2:34 PM</p>
 						</div>
 					</div>
 					{/* Hardcoded message 2 (user) */}
-					<div className="flex justify-end animate-fade-in" style={{ animationDelay: `0.3s` }}>
+					<div className="flex justify-end" style={{ animationDelay: `0.3s` }}>
 						<div className="max-w-xs px-4 py-2 rounded-2xl bg-primary text-white rounded-br-md">
 							<p className="text-sm">{t('msg-preview-2')}</p>
 							<p className="text-xs mt-1 text-white/70">2:35 PM</p>
@@ -40,7 +40,7 @@ export function ChatPreview() {
 					</div>
 
 					{/* Typing Indicator */}
-					<div className="flex justify-start animate-fade-in">
+					<div className="flex justify-start">
 						<div className="bg-base-200 px-4 py-2 rounded-2xl rounded-bl-md">
 							<div className="flex space-x-1">
 								<div className="w-2 h-2 bg-base-content/40 rounded-full animate-bounce"></div>
