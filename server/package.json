@@ -18,7 +18,12 @@
 		"test:watch": "jest --watch",
 		"test:cov": "jest --coverage",
 		"test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-		"test:e2e": "jest --config ./test/jest-e2e.json"
+		"test:e2e": "jest --config ./test/jest-e2e.json",
+		"typeorm": "ts-node node_modules/typeorm/cli.js",
+		"migration:create": "npm run typeorm -- migration:create",
+		"migration:generate": "npm run typeorm -- migration:generate -d ./src/data-source.ts",
+		"migration:run": "npm run typeorm -- migration:run -d ./src/data-source.ts",
+		"migration:revert": "npm run typeorm -- migration:revert -d ./src/data-source.ts"
 	},
 	"dependencies": {
 		"@nestjs/common": "^11.0.1",
@@ -40,6 +45,7 @@
 		"class-validator": "^0.14.2",
 		"cookie": "^1.0.2",
 		"cookie-parser": "^1.4.7",
+		"dotenv": "^16.5.0",
 		"passport": "^0.7.0",
 		"passport-jwt": "^4.0.1",
 		"passport-local": "^1.0.0",
