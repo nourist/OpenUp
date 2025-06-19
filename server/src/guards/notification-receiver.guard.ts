@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
 import { Request } from 'express';
 
-import { JwtPayload } from 'src/types/jwt-payload.interface';
+import { JwtPayload } from 'src/types/jwt-payload.type';
 import { NotificationService } from 'src/modules/notification/notification.service';
 
 @Injectable()

@@ -20,6 +20,7 @@ import { InvitationModule } from './modules/invitation/invitation.module';
 import { GoogleService } from './modules/google/google.service';
 import { GoogleModule } from './modules/google/google.module';
 import { MessageModule } from './modules/message/message.module';
+import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
 	imports: [
@@ -61,6 +62,7 @@ import { MessageModule } from './modules/message/message.module';
 		InvitationModule,
 		GoogleModule,
 		MessageModule,
+		RedisModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, GoogleService],

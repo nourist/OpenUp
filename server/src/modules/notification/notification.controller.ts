@@ -4,7 +4,7 @@ import { NotificationService } from './notification.service';
 import { instanceToPlain } from 'class-transformer';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { GetUser } from 'src/decorators/get-user.decorator';
-import { JwtPayload } from 'src/types/jwt-payload.interface';
+import { JwtPayload } from 'src/types/jwt-payload.type';
 import { IsNotificationReceiverGuard } from 'src/guards/notification-receiver.guard';
 
 @Controller('notification')

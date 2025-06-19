@@ -7,7 +7,7 @@ import { existsSync, mkdirSync } from 'fs';
 
 import { ChatService } from './chat.service';
 import { GetUser } from 'src/decorators/get-user.decorator';
-import { JwtPayload } from 'src/types/jwt-payload.interface';
+import { JwtPayload } from 'src/types/jwt-payload.type';
 import { AddMessageDto, ChangeNicknameDto, EditMessageDto, GetMessagesDto, AddReactionDto } from './chat.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { IsChatParticipantGuard, IsMessageSenderGuard } from 'src/guards/chat-role.guard';

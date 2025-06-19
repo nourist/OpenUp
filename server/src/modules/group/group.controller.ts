@@ -3,7 +3,7 @@ import { instanceToPlain } from 'class-transformer';
 
 import { GroupService } from './group.service';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
-import { JwtPayload } from 'src/types/jwt-payload.interface';
+import { JwtPayload } from 'src/types/jwt-payload.type';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { ChangeGroupInfoDto, CreateGroupDto, InviteToGroupDto } from './group.dto';
 import { InvitationService } from '../invitation/invitation.service';

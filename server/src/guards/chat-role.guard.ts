@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
 import { Request } from 'express';
 
-import { JwtPayload } from 'src/types/jwt-payload.interface';
+import { JwtPayload } from 'src/types/jwt-payload.type';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { GroupService } from 'src/modules/group/group.service';
 import { MessageService } from 'src/modules/message/message.service';
