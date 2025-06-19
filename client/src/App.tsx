@@ -17,6 +17,7 @@ import routes from './routes';
 import './libs/i18n';
 import Loading from './components/Loading';
 import { fetchInfo } from './services/auth';
+import useSocketConnect from './hooks/useSocketConnect';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchInterval: 180000 } } });
 
@@ -58,6 +59,7 @@ const App = () => {
 	useThemeListener();
 	useThemeChanger();
 	useLanguageSync();
+	useSocketConnect();
 
 	useEffect(() => {
 		fetchInfo()
