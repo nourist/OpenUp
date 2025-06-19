@@ -41,7 +41,7 @@ export class GoogleIdStrategy extends Strategy {
 				return this.fail('Google not provided enough information', 400);
 			}
 
-			let user = await this.userService.findByEmail(payload.email);
+			let user = await this.userService.findByEmail(payload.email).catch(() => null);
 
 			if (!user) {
 				user = this.userRepository.create({
