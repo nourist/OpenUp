@@ -90,25 +90,6 @@ export class UserService {
 		return user;
 	}
 
-	async getRelatedUsers(userId: number) {
-		const user = await this.findById(userId, true).catch(() => null);
-		if (!user) return [];
-		const friendList = user.friendList.map((friend) => friend.id);
-		const blockedList = user.blockedList.map((blocked) => blocked.id);
-		const blockedBy = user.blockedBy.map((blockedBy) => blockedBy.id);
-		const chats = user.chats
-			.filter((chat) => chat.chat.type === ChatType.GROUP)
-			.flatMap((chat) => chat.chat.participants.map((participant) => participant.id))
-			.filter((id) => id !== userId);
-		const relatedIds = new Set([...friendList, ...blockedList, ...blockedBy, ...chats]);
-		const relatedUsers = await this.userRepository.find({
-			where: {
-				id: In(Array.from(relatedIds)),
-			},
-		});
-		return relatedUsers;
-	}
-
 	async searchUserByEmail({ q, limit }: { q: string; limit: number }) {
 		const users = await this.userRepository.find({
 			where: {

@@ -8,6 +8,7 @@ import { JwtPayload } from 'src/types/jwt-payload.type';
 import { SocketWithUser } from 'src/types/socket-with-user.type';
 import { RedisService } from '../redis/redis.service';
 import { UserService } from './user.service';
+import { User } from 'src/entities/user.entity';
 
 @WebSocketGateway()
 export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -22,11 +23,9 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
 		private readonly userService: UserService,
 	) {}
 
-	async emitUserOnlineStatus(userId: number, online: boolean) {
-		const relatedUsers = await this.userService.getRelatedUsers(userId);
-		const rawSocketIds = await Promise.all(relatedUsers.map((user) => this.redisService.getClient().get(`user:${user.id}:socket`)));
-		const socketIds = rawSocketIds.filter((id): id is string => typeof id === 'string');
-		this.server.to(socketIds).emit('user.status.update', { userId, online });
+	emitUserOnlineStatus(user: User, online: boolean) {
+		if (user.chats.length == 0) return;
+		this.server.to(user.chats.map((chat) => chat.chat.id.toString())).emit('user.status.update', { userId: user.id, online });
 	}
 
 	async handleConnection(client: SocketWithUser) {
@@ -60,7 +59,11 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
 			await redis.set(`socket:${client.id}:user`, payload.sub);
 			await redis.set(`user:${payload.sub}:socket`, client.id);
 
-			await this.emitUserOnlineStatus(payload.sub, true);
+			const user = await this.userService.findById(payload.sub, ['chats', 'chats.chat', 'friendList']);
+
+			await client.join(user.chats.map((item) => item.chat.id.toString()));
+
+			this.emitUserOnlineStatus(user, true);
 
 			this.logger.log('Set user online status to true');
 		} catch (err) {
@@ -75,7 +78,8 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
 		const redis = this.redisService.getClient();
 
-		await this.emitUserOnlineStatus(client.data.user.sub, false);
+		const user = await this.userService.findById(client.data.user.sub, ['chats', 'chats.chat', 'friendList']);
+		this.emitUserOnlineStatus(user, false);
 
 		await redis.del(`socket:${client.id}:online`);
 		await redis.del(`socket:${client.id}:user`);
