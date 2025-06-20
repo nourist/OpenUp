@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ValidationError } from 'class-validator';
@@ -6,6 +7,7 @@ import { initializeTransactionalContext } from 'typeorm-transactional';
 
 import { AllExceptionsFilter } from './fillters/http-exception.filter';
 import { AppModule } from './app.module';
+import { SocketIoAdapter } from './adapters/socket-io.adapter';
 
 async function bootstrap() {
 	initializeTransactionalContext();
@@ -16,7 +18,7 @@ async function bootstrap() {
 
 	app.enableCors({
 		origin: process.env.CLIENT_URL || 'http://localhost:5173',
-		methods: ['GET', 'POST', 'PUT', 'DELETE'],
+		methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 		credentials: true, // nếu client gửi cookie
 	});
 	app.use(cookieParser());
@@ -43,6 +45,7 @@ async function bootstrap() {
 			},
 		}),
 	);
+	app.useWebSocketAdapter(new SocketIoAdapter(app));
 	app.useGlobalFilters(new AllExceptionsFilter());
 
 	await app.listen(process.env.PORT ?? 8080);

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthController } from './auth.controller';
@@ -19,7 +18,6 @@ import { GoogleService } from '../google/google.service';
 	imports: [
 		UserModule,
 		PassportModule,
-		ConfigModule.forRoot(),
 		TypeOrmModule.forFeature([User]),
 		JwtModule.register({
 			secret: process.env.JWT_SECRET!,

@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -24,7 +23,6 @@ import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
 	imports: [
-		ConfigModule.forRoot({ isGlobal: true }),
 		DevtoolsModule.register({
 			http: process.env.NODE_ENV !== 'production',
 		}),

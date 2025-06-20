@@ -9,12 +9,7 @@ import { SocketWithUser } from 'src/types/socket-with-user.type';
 import { RedisService } from '../redis/redis.service';
 import { UserService } from './user.service';
 
-@WebSocketGateway({
-	cors: {
-		origin: process.env.CLIENT_URL || 'http://localhost:5173',
-		credentials: true,
-	},
-})
+@WebSocketGateway()
 export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
 	private readonly logger: Logger = new Logger(UserGateway.name);
 

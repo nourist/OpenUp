@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 
 import { User } from '../../entities/user.entity';
 import { ChatType } from 'src/entities/chat.entity';
+import { RedisService } from '../redis/redis.service';
 
 export type UserRelation =
 	| 'friendList'
@@ -52,6 +53,7 @@ export class UserService {
 	constructor(
 		@InjectRepository(User)
 		private readonly userRepository: Repository<User>,
+		private readonly redisService: RedisService,
 	) {}
 
 	async checkEmailExists(email: string) {
@@ -104,5 +106,88 @@ export class UserService {
 			},
 		});
 		return relatedUsers;
+	}
+
+	async searchUserByEmail({q,limit}: { q: string; limit: number }) {
+		const users = await this.userRepository.find({
+			where: {
+				email: ILike(`%${q}%`),
+			},
+			take: limit,
+			relations: ['friendList', 'blockedList', 'blockedBy', 'chats', 'chats.chat'],
+		});
+		return users;
+	}
+
+	async getUserStatus(userId: number) {
+		const redis = this.redisService.getClient();
+		return Boolean(await redis.get(`socket:${await redis.get(`user:${userId}:socket`)}:online`));
+	}
+
+	async getRecommendUser(userId: number, {limit}:{limit:number}) {
+		const user = await this.findById(userId, [
+			'friendList',
+			'blockedList',
+			'blockedBy',
+			'chats',
+			'chats.chat',
+			'chats.chat.participants',
+		]);
+
+		const friendIds = new Set(user.friendList.map((f) => f.id));
+		const blockedIds = new Set(user.blockedList.map((b) => b.id));
+		const blockedByIds = new Set(user.blockedBy.map((b) => b.id));
+
+		const scores = new Map<number, number>();
+
+		// Friend of friend logic
+		if (friendIds.size > 0) {
+			const friendsOfUser = await this.userRepository.find({
+				where: { id: In(Array.from(friendIds)) },
+				relations: ['friendList'],
+			});
+
+			for (const friend of friendsOfUser) {
+				for (const fof of friend.friendList) {
+					if (fof.id !== userId && !friendIds.has(fof.id)) {
+						scores.set(fof.id, (scores.get(fof.id) || 0) + 2);
+					}
+				}
+			}
+		}
+
+		// Same group logic
+		const groupChats = user.chats.filter((c) => c.chat.type === ChatType.GROUP);
+		for (const userChat of groupChats) {
+			for (const participant of userChat.chat.participants) {
+				if (participant.id !== userId && !friendIds.has(participant.id)) {
+					scores.set(participant.id, (scores.get(participant.id) || 0) + 1);
+				}
+			}
+		}
+
+		// Filter out blocked users
+		blockedIds.forEach((id) => scores.delete(id));
+		blockedByIds.forEach((id) => scores.delete(id));
+
+		// Filter out users who are already friends
+		friendIds.forEach((id) => scores.delete(id));
+
+		const sortedRecommendedIds = Array.from(scores.entries())
+			.sort((a, b) => b[1] - a[1])
+			.slice(0, limit)
+			.map(([id]) => id);
+
+		if (sortedRecommendedIds.length === 0) {
+			return [];
+		}
+
+		const recommendedUsers = await this.userRepository.find({
+			where: { id: In(sortedRecommendedIds) },
+		});
+
+		// Order the results based on score
+		const userMap = new Map(recommendedUsers.map((u) => [u.id, u]));
+		return sortedRecommendedIds.map((id) => userMap.get(id)).filter(Boolean);
 	}
 }
