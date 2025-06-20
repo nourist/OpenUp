@@ -1,5 +1,9 @@
-import { Body, Controller, UseGuards, Post, Patch, Param, ParseIntPipe, Delete } from '@nestjs/common';
+import { Body, Controller, UseGuards, Post, Patch, Param, ParseIntPipe, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { instanceToPlain } from 'class-transformer';
+import { extname } from 'path';
+import { diskStorage } from 'multer';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { existsSync, mkdirSync } from 'fs';
 
 import { GroupService } from './group.service';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
@@ -15,6 +19,41 @@ export class GroupController {
 		private readonly groupService: GroupService,
 		private readonly invitationService: InvitationService,
 	) {}
+
+	@Patch(':chatId/avatar')
+	@UseGuards(JwtAuthGuard, IsChatParticipantGuard)
+	@UseInterceptors(
+		FileInterceptor('avatar', {
+			fileFilter: (req, file, cb) => {
+				if (file.mimetype.startsWith('image/')) {
+					cb(null, true);
+				} else {
+					cb(new Error('Only image files are allowed'), false);
+				}
+			},
+			storage: diskStorage({
+				destination: (req, file, cb) => {
+					const uploadPath = './uploads/groups';
+					if (!existsSync(uploadPath)) {
+						mkdirSync(uploadPath, { recursive: true });
+					}
+					cb(null, uploadPath);
+				},
+				filename: (req, file, cb) => {
+					const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`;
+					cb(null, uniqueName);
+				},
+			}),
+		}),
+	)
+	async uploadGroupAvatar(@GetUser() user: JwtPayload, @Param('chatId', ParseIntPipe) chatId: number, @UploadedFile() file: Express.Multer.File) {
+		const avatarPath = `uploads/groups/${file.filename}`;
+		const updatedGroup = await this.groupService.updateGroupAvatar(chatId, avatarPath);
+		return {
+			message: 'Group avatar uploaded successfully',
+			chat: instanceToPlain(updatedGroup),
+		};
+	}
 
 	@Post()
 	@UseGuards(JwtAuthGuard)

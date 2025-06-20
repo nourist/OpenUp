@@ -329,4 +329,13 @@ export class GroupService {
 		this.logger.log(`User ${userId} joined group ${group.id} by invite UUID`);
 		return await this.addMember(group.id, userId);
 	}
+
+	async updateGroupAvatar(chatId: number, avatarPath: string) {
+		const group = await this.chatService.findById(chatId, false, ChatType.GROUP);
+		group.avatar = avatarPath;
+		
+		this.logger.log(`Group avatar updated for ${group.id}: ${avatarPath}`);
+		
+		return this.chatRepository.save(group);
+	}
 }
