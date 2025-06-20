@@ -5,6 +5,7 @@ import { ILike, In, Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
 import { ChatType } from 'src/entities/chat.entity';
 import { RedisService } from '../redis/redis.service';
+import { UpdateUserSettingDto } from './user.dto';
 
 export type UserRelation =
 	| 'friendList'
@@ -108,7 +109,7 @@ export class UserService {
 		return relatedUsers;
 	}
 
-	async searchUserByEmail({q,limit}: { q: string; limit: number }) {
+	async searchUserByEmail({ q, limit }: { q: string; limit: number }) {
 		const users = await this.userRepository.find({
 			where: {
 				email: ILike(`%${q}%`),
@@ -124,15 +125,8 @@ export class UserService {
 		return Boolean(await redis.get(`socket:${await redis.get(`user:${userId}:socket`)}:online`));
 	}
 
-	async getRecommendUser(userId: number, {limit}:{limit:number}) {
-		const user = await this.findById(userId, [
-			'friendList',
-			'blockedList',
-			'blockedBy',
-			'chats',
-			'chats.chat',
-			'chats.chat.participants',
-		]);
+	async getRecommendUser(userId: number, { limit }: { limit: number }) {
+		const user = await this.findById(userId, ['friendList', 'blockedList', 'blockedBy', 'chats', 'chats.chat', 'chats.chat.participants']);
 
 		const friendIds = new Set(user.friendList.map((f) => f.id));
 		const blockedIds = new Set(user.blockedList.map((b) => b.id));
@@ -189,5 +183,37 @@ export class UserService {
 		// Order the results based on score
 		const userMap = new Map(recommendedUsers.map((u) => [u.id, u]));
 		return sortedRecommendedIds.map((id) => userMap.get(id)).filter(Boolean);
+	}
+
+	async updateUserSettings(userId: number, settings: UpdateUserSettingDto) {
+		const user = await this.findById(userId, false);
+		const { name, settings: newSettings } = settings;
+
+		if (name) {
+			user.name = name;
+		}
+
+		if (newSettings) {
+			user.settings = {
+				...user.settings,
+				...newSettings,
+				notification: {
+					...user.settings.notification,
+					...newSettings.notification,
+				},
+				notificationSound: {
+					...user.settings.notificationSound,
+					...newSettings.notificationSound,
+				},
+			};
+		}
+
+		return this.userRepository.save(user);
+	}
+
+	async updateUserAvatar(userId: number, avatarPath: string) {
+		const user = await this.findById(userId, false);
+		user.avatar = avatarPath;
+		return this.userRepository.save(user);
 	}
 }
