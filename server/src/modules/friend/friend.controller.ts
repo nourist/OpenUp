@@ -56,7 +56,7 @@ export class FriendController {
 	async unfriend(@GetUser() user: JwtPayload, @Param('friendId', ParseIntPipe) friendId: number) {
 		return {
 			message: 'Unfriended',
-			user: instanceToPlain(await this.friendService.unfriend({ friendId, userId: user.sub })),
+			success: await this.friendService.unfriend({ friendId, userId: user.sub }),
 		};
 	}
 

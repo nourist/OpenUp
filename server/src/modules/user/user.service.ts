@@ -195,6 +195,7 @@ export class UserService {
 	async updateUserAvatar(userId: number, avatarPath: string) {
 		const user = await this.findById(userId, false);
 		user.avatar = avatarPath;
-		return this.userRepository.save(user);
+
+		return await this.userRepository.save(user);
 	}
 }

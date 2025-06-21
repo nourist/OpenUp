@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, LessThan, Repository } from 'typeorm';
+import { WebSocketServer } from '@nestjs/websockets';
+import { Server } from 'socket.io';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { User } from 'src/entities/user.entity';
@@ -12,6 +14,7 @@ import { MessageService } from '../message/message.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from 'src/entities/notification.entity';
 import { ReactionEnum } from 'src/entities/message-reaction.entity';
+import { RedisService } from 'src/modules/redis/redis.service';
 
 export type ChatRelation = 'participants' | 'participants.user' | 'lastMessage';
 
@@ -25,6 +28,9 @@ export const getChatRelations = (relations: boolean | ChatRelation[]): ChatRelat
 export class ChatService {
 	private readonly logger: Logger = new Logger(ChatService.name);
 
+	@WebSocketServer()
+	server: Server;
+
 	constructor(
 		@InjectRepository(Chat)
 		private readonly chatRepository: Repository<Chat>,
@@ -35,6 +41,7 @@ export class ChatService {
 		private readonly userService: UserService,
 		private readonly messageService: MessageService,
 		private readonly notificationService: NotificationService,
+		private readonly redisService: RedisService,
 	) {}
 
 	async findParticipant(chatId: number, userId: number, type?: ChatType) {
@@ -89,16 +96,15 @@ export class ChatService {
 		return chat;
 	}
 
-	async createDirectChat(user1: User, user2: User) {
-		const existingChat = await this.findDirectChat(user1, user2);
+	async createDirectChat(from: User, to: User) {
+		const existingChat = await this.findDirectChat(from, to);
 		if (existingChat) {
-			//if direct chat already exists, return it
 			this.logger.log(`Direct chat already exists returning: ${existingChat.id}`);
 			return existingChat;
 		}
 
 		const participant1 = this.chatParticipantRepository.create({
-			user: user1,
+			user: from,
 		});
 
 		this.logger.log(`Participant 1 created: ${participant1.id}`);
@@ -106,7 +112,7 @@ export class ChatService {
 		await this.chatParticipantRepository.save(participant1);
 
 		const participant2 = this.chatParticipantRepository.create({
-			user: user2,
+			user: to,
 		});
 
 		this.logger.log(`Participant 2 created: ${participant2.id}`);
@@ -119,9 +125,26 @@ export class ChatService {
 			participants: [participant1, participant2],
 		});
 
-		this.logger.log(`Chat created for user ${user1.id} and user ${user2.id}: ${chat.id}`);
+		this.logger.log(`Chat created for user ${from.id} and user ${to.id}: ${chat.id}`);
 
-		return this.chatRepository.save(chat);
+		const redis = this.redisService.getClient();
+		const toSocketId = await redis.get(`user:${to.id}:socket`);
+		const fromSocketId = await redis.get(`user:${from.id}:socket`);
+
+		const savedChat = await this.chatRepository.save(chat);
+
+		//after chat saved, join chat to user2 to make sure that 2 users are in the same chat & can receive event
+		//emit chat.create to user2 and user1
+		if (toSocketId) {
+			await this.server.sockets.sockets.get(toSocketId)?.join(chat.id.toString());
+			this.server.to(toSocketId).emit('chat.create', savedChat);
+		}
+		if (fromSocketId) {
+			await this.server.sockets.sockets.get(fromSocketId)?.join(chat.id.toString());
+			this.server.to(fromSocketId).emit('chat.create', savedChat);
+		}
+
+		return savedChat;
 	}
 
 	async changeParticipantSettings(userId: number, { muted, pinned, chatId }: { muted?: boolean; pinned?: boolean; chatId: number }) {
@@ -147,7 +170,17 @@ export class ChatService {
 
 		this.logger.log(`User ${userId} changed nickname to ${nickname} in group ${chatId}`);
 
-		return this.chatParticipantRepository.save(participant);
+		const savedParticipant = await this.chatParticipantRepository.save(participant);
+
+		const redis = this.redisService.getClient();
+		const userSocketId = await redis.get(`user:${userId}:socket`);
+
+		this.server.to(chatId.toString()).emit('chat.update', await this.findById(chatId, true));
+		if (userSocketId) {
+			this.server.to(userSocketId).emit('participant.update', savedParticipant);
+		}
+
+		return savedParticipant;
 	}
 
 	async getMessages({ chatId, limit, before }: { chatId: number; limit?: number; before?: Date }) {
@@ -266,6 +299,8 @@ export class ChatService {
 			this.logger.log(`Notification for replyTo message created`);
 		}
 
+		this.server.to(chatId.toString()).emit('message.create', message);
+
 		return message;
 	}
 
@@ -322,7 +357,11 @@ export class ChatService {
 		message.mentionedUsers.push(...(await Promise.all(newMentionedUsersIds.map((id) => this.userService.findById(id)))));
 
 		//update message
-		return this.messageRepository.save(message);
+		const savedMessage = await this.messageRepository.save(message);
+
+		this.server.to(chatId.toString()).emit('message.update', savedMessage);
+
+		return savedMessage;
 	}
 
 	@Transactional()
@@ -338,6 +377,8 @@ export class ChatService {
 		);
 
 		this.logger.log(`Last message in chat ${chatId} updated`);
+
+		this.server.to(chatId.toString()).emit('message.delete', messageId);
 
 		return true;
 	}
@@ -371,7 +412,10 @@ export class ChatService {
 			throw new BadRequestException('Message not found in this chat');
 		}
 
-		await this.messageService.react({ messageId, userId, emoji });
+		const savedMessage = await this.messageService.react({ messageId, userId, emoji });
+
+		//emit message.update to chat participants
+		this.server.to(chatId.toString()).emit('message.update', savedMessage);
 
 		this.logger.log(`Message ${messageId} reacted by user ${userId} with emoji ${emoji}`);
 

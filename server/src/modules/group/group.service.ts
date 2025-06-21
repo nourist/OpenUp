@@ -12,10 +12,16 @@ import { ChatService } from '../chat/chat.service';
 import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
 import { getChatRelations } from '../chat/chat.service';
+import { RedisService } from '../redis/redis.service';
+import { Server } from 'socket.io';
+import { WebSocketServer } from '@nestjs/websockets';
 
 @Injectable()
 export class GroupService {
 	private readonly logger: Logger = new Logger(GroupService.name);
+
+	@WebSocketServer()
+	server: Server;
 
 	constructor(
 		@InjectRepository(Chat)
@@ -27,6 +33,7 @@ export class GroupService {
 		private readonly userService: UserService,
 		private readonly chatService: ChatService,
 		private readonly notificationService: NotificationService,
+		private readonly redisService: RedisService,
 	) {}
 
 	async findGroupParticipant(chatId: number, userId: number) {
@@ -73,12 +80,15 @@ export class GroupService {
 	}
 
 	async changeInfo({ chatId, name, avatar }: { chatId: number; name?: string; avatar?: string }) {
-		const group = await this.chatService.findById(chatId, false, ChatType.GROUP);
+		const group = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		group.name = name ?? group.name;
 		group.avatar = avatar ?? group.avatar;
 
 		this.logger.log(`Group chat info changed for ${group.id}: ${JSON.stringify({ name, avatar })}`);
+
+		//emit group.update to all participants
+		this.server.to(group.id.toString()).emit('chat.update', group);
 
 		return this.chatRepository.save(group);
 	}
@@ -106,7 +116,10 @@ export class GroupService {
 		this.logger.log(`Invitation created: ${savedInvitation.id}`);
 
 		await this.notificationService.createNotification(to, { type: NotificationType.INVITATION, invitation: savedInvitation }, (to) => to.settings.notification.groupInvitation);
+
 		this.logger.log(`Invitation sent to ${to.id} from ${from.id} for group ${group.id}`);
+
+		this.server.to(group.id.toString()).emit('chat.update', group);
 
 		// group.invitations.push(savedInvitation);
 		// return this.chatRepository.save(group);
@@ -132,6 +145,14 @@ export class GroupService {
 
 			const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
+			this.server.to(group.id.toString()).emit('chat.update', updatedGroup);
+
+			const redis = this.redisService.getClient();
+			const userSocketId = await redis.get(`user:${userId}:socket`);
+			if (userSocketId) {
+				this.server.to(userSocketId).emit('participant.update', participant);
+			}
+
 			return updatedGroup;
 		}
 
@@ -145,7 +166,17 @@ export class GroupService {
 
 		group.participants.push(savedParticipant);
 
-		return this.chatRepository.save(group);
+		const savedGroup = await this.chatRepository.save(group);
+
+		this.server.to(group.id.toString()).emit('chat.update', savedGroup);
+
+		const redis = this.redisService.getClient();
+		const userSocketId = await redis.get(`user:${userId}:socket`);
+		if (userSocketId) {
+			this.server.to(userSocketId).emit('participant.create', savedParticipant);
+		}
+
+		return savedGroup;
 	}
 
 	async removeMember(chatId: number, userId: number) {
@@ -191,6 +222,7 @@ export class GroupService {
 
 		const savedInvitation = await this.invitationRepository.save(invitation);
 
+		//create notification and emit invitation.reply to 'from' user
 		await this.notificationService.createNotification(
 			invitation.from,
 			{ type: NotificationType.INVITATION_REPLY, invitation: savedInvitation },
@@ -214,6 +246,15 @@ export class GroupService {
 
 		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
+		//emit chat.update to group
+		this.server.to(chatId.toString()).emit('chat.update', updatedGroup);
+
+		const redis = this.redisService.getClient();
+		const userSocketId = await redis.get(`user:${userId}:socket`);
+		if (userSocketId) {
+			this.server.to(userSocketId).emit('participant.update', participant);
+		}
+
 		return updatedGroup;
 	}
 
@@ -231,6 +272,15 @@ export class GroupService {
 
 		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
+		//emit chat.update to group
+		this.server.to(chatId.toString()).emit('chat.update', updatedGroup);
+
+		const redis = this.redisService.getClient();
+		const userSocketId = await redis.get(`user:${userId}:socket`);
+		if (userSocketId) {
+			this.server.to(userSocketId).emit('participant.update', participant);
+		}
+
 		return updatedGroup;
 	}
 
@@ -246,6 +296,15 @@ export class GroupService {
 
 		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
+		//emit chat.update to group
+		this.server.to(chatId.toString()).emit('chat.update', updatedGroup);
+
+		const redis = this.redisService.getClient();
+		const userSocketId = await redis.get(`user:${userId}:socket`);
+		if (userSocketId) {
+			this.server.to(userSocketId).emit('participant.update', participant);
+		}
+
 		return updatedGroup;
 	}
 
@@ -256,7 +315,12 @@ export class GroupService {
 
 		this.logger.log(`Invite UUID ${group.allowInviteUUID ? 'enabled' : 'disabled'} for group ${chatId}`);
 
-		return this.chatRepository.save(group);
+		const savedGroup = await this.chatRepository.save(group);
+
+		//emit chat.update to group
+		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+
+		return savedGroup;
 	}
 
 	async generateInviteUUID(chatId: number) {
@@ -271,7 +335,12 @@ export class GroupService {
 
 		this.logger.log(`Invite UUID generated for group ${chatId}`);
 
-		return this.chatRepository.save(group);
+		const savedGroup = await this.chatRepository.save(group);
+
+		//emit chat.update to group
+		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+
+		return savedGroup;
 	}
 
 	async revokeInviteUUID(chatId: number) {
@@ -282,7 +351,12 @@ export class GroupService {
 
 		this.logger.log(`Invite UUID revoked for group ${chatId}`);
 
-		return this.chatRepository.save(group);
+		const savedGroup = await this.chatRepository.save(group);
+
+		//emit chat.update to group
+		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+
+		return savedGroup;
 	}
 
 	async extendInviteUUID(chatId: number) {
@@ -300,7 +374,12 @@ export class GroupService {
 
 		this.logger.log(`Invite UUID extended for group ${chatId}`);
 
-		return this.chatRepository.save(group);
+		const savedGroup = await this.chatRepository.save(group);
+
+		//emit chat.update to group
+		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+
+		return savedGroup;
 	}
 
 	@Transactional()
@@ -333,9 +412,14 @@ export class GroupService {
 	async updateGroupAvatar(chatId: number, avatarPath: string) {
 		const group = await this.chatService.findById(chatId, false, ChatType.GROUP);
 		group.avatar = avatarPath;
-		
+
 		this.logger.log(`Group avatar updated for ${group.id}: ${avatarPath}`);
-		
-		return this.chatRepository.save(group);
+
+		const savedGroup = await this.chatRepository.save(group);
+
+		//emit chat.update to group
+		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+
+		return savedGroup;
 	}
 }

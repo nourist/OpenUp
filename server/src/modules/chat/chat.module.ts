@@ -8,11 +8,10 @@ import { ChatParticipant } from 'src/entities/chat-participants.entity';
 import { UserModule } from '../user/user.module';
 import { MessageModule } from '../message/message.module';
 import { NotificationModule } from '../notification/notification.module';
-import { ChatGateway } from './chat.gateway';
 
 @Module({
 	controllers: [ChatController],
-	providers: [ChatService, ChatGateway],
+	providers: [ChatService],
 	imports: [TypeOrmModule.forFeature([Chat, ChatParticipant]), UserModule, MessageModule, NotificationModule],
 	exports: [TypeOrmModule, ChatService],
 })

@@ -2,6 +2,8 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
+import { Server } from 'socket.io';
+import { WebSocketServer } from '@nestjs/websockets';
 
 import { User } from 'src/entities/user.entity';
 import { NotificationType } from 'src/entities/notification.entity';
@@ -9,10 +11,14 @@ import { Invitation, InvitationStatus, InvitationType } from 'src/entities/invit
 import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
 import { ChatService } from '../chat/chat.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class FriendService {
 	private readonly logger: Logger = new Logger(FriendService.name);
+
+	@WebSocketServer()
+	server: Server;
 
 	constructor(
 		@InjectRepository(User)
@@ -22,6 +28,7 @@ export class FriendService {
 		private readonly userService: UserService,
 		private readonly notificationService: NotificationService,
 		private readonly chatService: ChatService,
+		private readonly redisService: RedisService,
 	) {}
 
 	isInvited(from: User, to: User) /*please make sure that user have invitation relations*/ {
@@ -74,6 +81,7 @@ export class FriendService {
 			throw new BadRequestException('You have been blocked by this user');
 		}
 
+		//create pending invitation
 		const invitation = this.invitationRepository.create({
 			from: { id: fromId },
 			to,
@@ -83,6 +91,8 @@ export class FriendService {
 		const savedInvitation = await this.invitationRepository.save(invitation);
 
 		this.logger.log(`Invitation created: ${savedInvitation.id}`);
+
+		//create notification and emit invitation.create to 'to' user
 		await this.notificationService.createNotification(
 			to,
 			{
@@ -96,7 +106,7 @@ export class FriendService {
 	}
 
 	@Transactional()
-	async replyInvitation({ userId, invitationId, accepted }: { userId: number; invitationId: number; accepted: boolean }) {
+	async replyInvitation({ userId /*receiver */, invitationId, accepted }: { userId: number; invitationId: number; accepted: boolean }) {
 		const invitation = await this.invitationRepository.findOne({
 			where: {
 				id: invitationId,
@@ -113,19 +123,21 @@ export class FriendService {
 
 		/*
 		- update status
-		- if accepted and not friend, make friend and create direct chat
 		*/
 		if (accepted) {
 			invitation.status = InvitationStatus.ACCEPTED;
 			this.logger.log(`Invitation ${invitationId} accepted for user ${userId}`);
 
 			await this.makeFriend(invitation.from, invitation.to);
+
+			//create direct chat after accepted, emit chat to both user
 			await this.chatService.createDirectChat(invitation.from, invitation.to);
 		} else {
 			invitation.status = InvitationStatus.REJECTED;
 			this.logger.log(`Invitation ${invitationId} rejected for user ${userId}`);
 		}
 
+		//create notification and emit invitation to 'from' user
 		await this.notificationService.createNotification(
 			invitation.from,
 			{
@@ -135,9 +147,7 @@ export class FriendService {
 			(from) => from.settings.notification.friendRequestReply,
 		);
 
-		await this.invitationRepository.save(invitation);
-
-		return invitation;
+		return this.invitationRepository.save(invitation);
 	}
 
 	@Transactional()
@@ -149,9 +159,17 @@ export class FriendService {
 			await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(userId).remove(friendId);
 			await this.userRepository.createQueryBuilder().relation(User, 'friendList').of(friendId).remove(userId);
 			this.logger.log(`User ${userId} is now unfriends with user ${friendId}`);
+
+			//emit friend.unfriend to friend
+			const redis = this.redisService.getClient();
+			const friendSocketId = await redis.get(`user:${friendId}:socket`);
+			if (friendSocketId) {
+				this.server.to(friendSocketId).emit('friend.delete', userId);
+			}
 		}
 
-		return await this.userService.findById(userId, true);
+		// return await this.userService.findById(userId, true);
+		return true;
 	}
 
 	async blockUser({ userId, blockedUserId }: { userId: number; blockedUserId: number }) {
@@ -166,17 +184,36 @@ export class FriendService {
 		user.blockedList.push(blockedUser);
 		await this.userRepository.save(user);
 
+		//emit block.create to blocked user
+		const redis = this.redisService.getClient();
+		const blockedUserIdSocketId = await redis.get(`user:${blockedUserId}:socket`);
+		if (blockedUserIdSocketId) {
+			this.server.to(blockedUserIdSocketId).emit('block.create', userId);
+		}
+
 		return user;
 	}
 
 	async unblockUser({ userId, blockedUserId }: { userId: number; blockedUserId: number }) {
 		const user = await this.userService.findById(userId, true);
-		await this.userService.findById(blockedUserId);
+		const blockedUser = await this.userService.findById(blockedUserId);
+
+		if (!this.isBlocked(user, blockedUser)) {
+			this.logger.log(`User ${userId} is not blocked by user ${blockedUserId}`);
+			throw new BadRequestException('User is not blocked');
+		}
 
 		user.blockedList = user.blockedList.filter((user) => user.id !== blockedUserId);
 		await this.userRepository.save(user);
 
-		this.logger.log(`User ${userId} is now unblocked user ${blockedUserId}`);
+		//emit block.delete to blocked user
+		const redis = this.redisService.getClient();
+		const blockedUserIdSocketId = await redis.get(`user:${blockedUserId}:socket`);
+		if (blockedUserIdSocketId) {
+			this.server.to(blockedUserIdSocketId).emit('block.delete', userId);
+		}
+
+		this.logger.log(`User ${userId} is now unblocked ${blockedUserId}`);
 
 		return user;
 	}
