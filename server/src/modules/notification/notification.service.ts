@@ -2,8 +2,6 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
-import { Server } from 'socket.io';
-import { WebSocketServer } from '@nestjs/websockets';
 
 import { Notification, NotificationType } from 'src/entities/notification.entity';
 import { User } from 'src/entities/user.entity';
@@ -12,6 +10,7 @@ import { Message } from 'src/entities/message.entity';
 import { UserService } from '../user/user.service';
 import { MessageReaction } from 'src/entities/message-reaction.entity';
 import { RedisService } from '../redis/redis.service';
+import { NotificationGateway } from './notification.gateway';
 
 type NotificationRelation = 'user' | 'invitation';
 
@@ -26,14 +25,12 @@ const getNotificationRelations = (relations: boolean | NotificationRelation[]): 
 export class NotificationService {
 	private readonly logger: Logger = new Logger(NotificationService.name);
 
-	@WebSocketServer()
-	server: Server;
-
 	constructor(
 		@InjectRepository(Notification)
 		private readonly notificationRepository: Repository<Notification>,
 		private readonly userService: UserService,
 		private readonly redisService: RedisService,
+		private readonly notificationGateway: NotificationGateway,
 	) {}
 
 	async findById(notificationId: number) {
@@ -75,7 +72,7 @@ export class NotificationService {
 			const toSocketId = await redis.get(`user:${to.id}:socket`);
 
 			if (toSocketId) {
-				this.server.to(toSocketId).emit('notification.create', savedNotification);
+				this.notificationGateway.server.to(toSocketId).emit('notification.create', savedNotification);
 			}
 			this.logger.log(`Notification created for user ${to.id}`);
 

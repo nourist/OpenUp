@@ -6,10 +6,11 @@ import { NotificationController } from './notification.controller';
 import { Notification } from 'src/entities/notification.entity';
 import { UserModule } from '../user/user.module';
 import { RedisModule } from '../redis/redis.module';
+import { NotificationGateway } from './notification.gateway';
 
 @Module({
 	controllers: [NotificationController],
-	providers: [NotificationService],
+	providers: [NotificationService, NotificationGateway],
 	imports: [TypeOrmModule.forFeature([Notification]), UserModule, RedisModule],
 	exports: [TypeOrmModule, NotificationService],
 })

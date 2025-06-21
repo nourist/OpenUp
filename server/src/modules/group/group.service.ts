@@ -3,8 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { Transactional } from 'typeorm-transactional';
-import { Server } from 'socket.io';
-import { WebSocketServer } from '@nestjs/websockets';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { ChatParticipant } from 'src/entities/chat-participants.entity';
@@ -15,13 +13,11 @@ import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
 import { getChatRelations } from '../chat/chat.service';
 import { RedisService } from '../redis/redis.service';
+import { GroupGateway } from './group.gateway';
 
 @Injectable()
 export class GroupService {
 	private readonly logger: Logger = new Logger(GroupService.name);
-
-	@WebSocketServer()
-	server: Server;
 
 	constructor(
 		@InjectRepository(Chat)
@@ -34,6 +30,7 @@ export class GroupService {
 		private readonly chatService: ChatService,
 		private readonly notificationService: NotificationService,
 		private readonly redisService: RedisService,
+		private readonly groupGateway: GroupGateway,
 	) {}
 
 	async findGroupParticipant(chatId: number, userId: number) {
@@ -88,7 +85,7 @@ export class GroupService {
 		this.logger.log(`Group chat info changed for ${group.id}: ${JSON.stringify({ name, avatar })}`);
 
 		//emit group.update to all participants
-		this.server.to(group.id.toString()).emit('chat.update', group);
+		this.groupGateway.server.to(group.id.toString()).emit('chat.update', group);
 
 		return this.chatRepository.save(group);
 	}
@@ -119,7 +116,7 @@ export class GroupService {
 
 		this.logger.log(`Invitation sent to ${to.id} from ${from.id} for group ${group.id}`);
 
-		this.server.to(group.id.toString()).emit('chat.update', group);
+		this.groupGateway.server.to(group.id.toString()).emit('chat.update', group);
 
 		// group.invitations.push(savedInvitation);
 		// return this.chatRepository.save(group);
@@ -145,12 +142,12 @@ export class GroupService {
 
 			const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
-			this.server.to(group.id.toString()).emit('chat.update', updatedGroup);
+			this.groupGateway.server.to(group.id.toString()).emit('chat.update', updatedGroup);
 
 			const redis = this.redisService.getClient();
 			const userSocketId = await redis.get(`user:${userId}:socket`);
 			if (userSocketId) {
-				this.server.to(userSocketId).emit('participant.update', participant);
+				this.groupGateway.server.to(userSocketId).emit('participant.update', participant);
 			}
 
 			return updatedGroup;
@@ -168,12 +165,12 @@ export class GroupService {
 
 		const savedGroup = await this.chatRepository.save(group);
 
-		this.server.to(group.id.toString()).emit('chat.update', savedGroup);
+		this.groupGateway.server.to(group.id.toString()).emit('chat.update', savedGroup);
 
 		const redis = this.redisService.getClient();
 		const userSocketId = await redis.get(`user:${userId}:socket`);
 		if (userSocketId) {
-			this.server.to(userSocketId).emit('participant.create', savedParticipant);
+			this.groupGateway.server.to(userSocketId).emit('participant.create', savedParticipant);
 		}
 
 		return savedGroup;
@@ -247,12 +244,12 @@ export class GroupService {
 		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		//emit chat.update to group
-		this.server.to(chatId.toString()).emit('chat.update', updatedGroup);
+		this.groupGateway.server.to(chatId.toString()).emit('chat.update', updatedGroup);
 
 		const redis = this.redisService.getClient();
 		const userSocketId = await redis.get(`user:${userId}:socket`);
 		if (userSocketId) {
-			this.server.to(userSocketId).emit('participant.update', participant);
+			this.groupGateway.server.to(userSocketId).emit('participant.update', participant);
 		}
 
 		return updatedGroup;
@@ -273,12 +270,12 @@ export class GroupService {
 		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		//emit chat.update to group
-		this.server.to(chatId.toString()).emit('chat.update', updatedGroup);
+		this.groupGateway.server.to(chatId.toString()).emit('chat.update', updatedGroup);
 
 		const redis = this.redisService.getClient();
 		const userSocketId = await redis.get(`user:${userId}:socket`);
 		if (userSocketId) {
-			this.server.to(userSocketId).emit('participant.update', participant);
+			this.groupGateway.server.to(userSocketId).emit('participant.update', participant);
 		}
 
 		return updatedGroup;
@@ -297,12 +294,12 @@ export class GroupService {
 		const updatedGroup = await this.chatService.findById(chatId, true, ChatType.GROUP);
 
 		//emit chat.update to group
-		this.server.to(chatId.toString()).emit('chat.update', updatedGroup);
+		this.groupGateway.server.to(chatId.toString()).emit('chat.update', updatedGroup);
 
 		const redis = this.redisService.getClient();
 		const userSocketId = await redis.get(`user:${userId}:socket`);
 		if (userSocketId) {
-			this.server.to(userSocketId).emit('participant.update', participant);
+			this.groupGateway.server.to(userSocketId).emit('participant.update', participant);
 		}
 
 		return updatedGroup;
@@ -318,7 +315,7 @@ export class GroupService {
 		const savedGroup = await this.chatRepository.save(group);
 
 		//emit chat.update to group
-		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+		this.groupGateway.server.to(chatId.toString()).emit('chat.update', savedGroup);
 
 		return savedGroup;
 	}
@@ -338,7 +335,7 @@ export class GroupService {
 		const savedGroup = await this.chatRepository.save(group);
 
 		//emit chat.update to group
-		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+		this.groupGateway.server.to(chatId.toString()).emit('chat.update', savedGroup);
 
 		return savedGroup;
 	}
@@ -354,7 +351,7 @@ export class GroupService {
 		const savedGroup = await this.chatRepository.save(group);
 
 		//emit chat.update to group
-		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+		this.groupGateway.server.to(chatId.toString()).emit('chat.update', savedGroup);
 
 		return savedGroup;
 	}
@@ -377,7 +374,7 @@ export class GroupService {
 		const savedGroup = await this.chatRepository.save(group);
 
 		//emit chat.update to group
-		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+		this.groupGateway.server.to(chatId.toString()).emit('chat.update', savedGroup);
 
 		return savedGroup;
 	}
@@ -418,7 +415,7 @@ export class GroupService {
 		const savedGroup = await this.chatRepository.save(group);
 
 		//emit chat.update to group
-		this.server.to(chatId.toString()).emit('chat.update', savedGroup);
+		this.groupGateway.server.to(chatId.toString()).emit('chat.update', savedGroup);
 
 		return savedGroup;
 	}

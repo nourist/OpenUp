@@ -7,10 +7,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatModule } from '../chat/chat.module';
 import { RedisModule } from '../redis/redis.module';
 import { NotificationModule } from '../notification/notification.module';
+import { InvitationGateway } from './invitation.gateway';
 
 @Module({
 	controllers: [InvitationController],
-	providers: [InvitationService],
+	providers: [InvitationService, InvitationGateway],
 	imports: [TypeOrmModule.forFeature([Invitation]), ChatModule, RedisModule, NotificationModule],
 	exports: [TypeOrmModule, InvitationService],
 })

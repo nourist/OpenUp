@@ -2,8 +2,6 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
-import { Server } from 'socket.io';
-import { WebSocketServer } from '@nestjs/websockets';
 
 import { User } from 'src/entities/user.entity';
 import { NotificationType } from 'src/entities/notification.entity';
@@ -12,13 +10,11 @@ import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
 import { ChatService } from '../chat/chat.service';
 import { RedisService } from '../redis/redis.service';
+import { FriendGateway } from './friend.gateway';
 
 @Injectable()
 export class FriendService {
 	private readonly logger: Logger = new Logger(FriendService.name);
-
-	@WebSocketServer()
-	server: Server;
 
 	constructor(
 		@InjectRepository(User)
@@ -29,6 +25,7 @@ export class FriendService {
 		private readonly notificationService: NotificationService,
 		private readonly chatService: ChatService,
 		private readonly redisService: RedisService,
+		private readonly friendGateway: FriendGateway,
 	) {}
 
 	isInvited(from: User, to: User) /*please make sure that user have invitation relations*/ {
@@ -121,9 +118,7 @@ export class FriendService {
 			throw new BadRequestException('Invitation not found');
 		}
 
-		/*
-		- update status
-		*/
+		// update status
 		if (accepted) {
 			invitation.status = InvitationStatus.ACCEPTED;
 			this.logger.log(`Invitation ${invitationId} accepted for user ${userId}`);
@@ -164,7 +159,7 @@ export class FriendService {
 			const redis = this.redisService.getClient();
 			const friendSocketId = await redis.get(`user:${friendId}:socket`);
 			if (friendSocketId) {
-				this.server.to(friendSocketId).emit('friend.delete', userId);
+				this.friendGateway.server.to(friendSocketId).emit('friend.delete', userId);
 			}
 		}
 
@@ -188,7 +183,7 @@ export class FriendService {
 		const redis = this.redisService.getClient();
 		const blockedUserIdSocketId = await redis.get(`user:${blockedUserId}:socket`);
 		if (blockedUserIdSocketId) {
-			this.server.to(blockedUserIdSocketId).emit('block.create', userId);
+			this.friendGateway.server.to(blockedUserIdSocketId).emit('block.create', userId);
 		}
 
 		return user;
@@ -210,7 +205,7 @@ export class FriendService {
 		const redis = this.redisService.getClient();
 		const blockedUserIdSocketId = await redis.get(`user:${blockedUserId}:socket`);
 		if (blockedUserIdSocketId) {
-			this.server.to(blockedUserIdSocketId).emit('block.delete', userId);
+			this.friendGateway.server.to(blockedUserIdSocketId).emit('block.delete', userId);
 		}
 
 		this.logger.log(`User ${userId} is now unblocked ${blockedUserId}`);

@@ -1,8 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, LessThan, Repository } from 'typeorm';
-import { WebSocketServer } from '@nestjs/websockets';
-import { Server } from 'socket.io';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { User } from 'src/entities/user.entity';
@@ -15,6 +13,7 @@ import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from 'src/entities/notification.entity';
 import { ReactionEnum } from 'src/entities/message-reaction.entity';
 import { RedisService } from 'src/modules/redis/redis.service';
+import { ChatGateway } from './chat.gateway';
 
 export type ChatRelation = 'participants' | 'participants.user' | 'lastMessage';
 
@@ -28,9 +27,6 @@ export const getChatRelations = (relations: boolean | ChatRelation[]): ChatRelat
 export class ChatService {
 	private readonly logger: Logger = new Logger(ChatService.name);
 
-	@WebSocketServer()
-	server: Server;
-
 	constructor(
 		@InjectRepository(Chat)
 		private readonly chatRepository: Repository<Chat>,
@@ -42,6 +38,7 @@ export class ChatService {
 		private readonly messageService: MessageService,
 		private readonly notificationService: NotificationService,
 		private readonly redisService: RedisService,
+		private readonly chatGateway: ChatGateway,
 	) {}
 
 	async findParticipant(chatId: number, userId: number, type?: ChatType) {
@@ -136,12 +133,12 @@ export class ChatService {
 		//after chat saved, join chat to user2 to make sure that 2 users are in the same chat & can receive event
 		//emit chat.create to user2 and user1
 		if (toSocketId) {
-			await this.server.sockets.sockets.get(toSocketId)?.join(chat.id.toString());
-			this.server.to(toSocketId).emit('chat.create', savedChat);
+			await this.chatGateway.server.sockets.sockets.get(toSocketId)?.join(chat.id.toString());
+			this.chatGateway.server.to(toSocketId).emit('chat.create', savedChat);
 		}
 		if (fromSocketId) {
-			await this.server.sockets.sockets.get(fromSocketId)?.join(chat.id.toString());
-			this.server.to(fromSocketId).emit('chat.create', savedChat);
+			await this.chatGateway.server.sockets.sockets.get(fromSocketId)?.join(chat.id.toString());
+			this.chatGateway.server.to(fromSocketId).emit('chat.create', savedChat);
 		}
 
 		return savedChat;
@@ -175,9 +172,9 @@ export class ChatService {
 		const redis = this.redisService.getClient();
 		const userSocketId = await redis.get(`user:${userId}:socket`);
 
-		this.server.to(chatId.toString()).emit('chat.update', await this.findById(chatId, true));
+		this.chatGateway.server.to(chatId.toString()).emit('chat.update', await this.findById(chatId, true));
 		if (userSocketId) {
-			this.server.to(userSocketId).emit('participant.update', savedParticipant);
+			this.chatGateway.server.to(userSocketId).emit('participant.update', savedParticipant);
 		}
 
 		return savedParticipant;
@@ -299,7 +296,7 @@ export class ChatService {
 			this.logger.log(`Notification for replyTo message created`);
 		}
 
-		this.server.to(chatId.toString()).emit('message.create', message);
+		this.chatGateway.server.to(chatId.toString()).emit('message.create', message);
 
 		return message;
 	}
@@ -359,7 +356,7 @@ export class ChatService {
 		//update message
 		const savedMessage = await this.messageRepository.save(message);
 
-		this.server.to(chatId.toString()).emit('message.update', savedMessage);
+		this.chatGateway.server.to(chatId.toString()).emit('message.update', savedMessage);
 
 		return savedMessage;
 	}
@@ -378,7 +375,7 @@ export class ChatService {
 
 		this.logger.log(`Last message in chat ${chatId} updated`);
 
-		this.server.to(chatId.toString()).emit('message.delete', messageId);
+		this.chatGateway.server.to(chatId.toString()).emit('message.delete', messageId);
 
 		return true;
 	}
@@ -415,7 +412,7 @@ export class ChatService {
 		const savedMessage = await this.messageService.react({ messageId, userId, emoji });
 
 		//emit message.update to chat participants
-		this.server.to(chatId.toString()).emit('message.update', savedMessage);
+		this.chatGateway.server.to(chatId.toString()).emit('message.update', savedMessage);
 
 		this.logger.log(`Message ${messageId} reacted by user ${userId} with emoji ${emoji}`);
 

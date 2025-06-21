@@ -1,8 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Server } from 'socket.io';
-import { WebSocketServer } from '@nestjs/websockets';
 
 import { ChatType } from 'src/entities/chat.entity';
 import { Invitation } from 'src/entities/invitation.entity';
@@ -10,13 +8,11 @@ import { InvitationStatus } from 'src/entities/invitation.entity';
 import { ChatService } from '../chat/chat.service';
 import { RedisService } from '../redis/redis.service';
 import { Notification } from 'src/entities/notification.entity';
+import { InvitationGateway } from './invitation.gateway';
 
 @Injectable()
 export class InvitationService {
 	private readonly logger: Logger = new Logger(InvitationService.name);
-
-	@WebSocketServer()
-	server: Server;
 
 	constructor(
 		@InjectRepository(Invitation)
@@ -25,6 +21,7 @@ export class InvitationService {
 		private readonly notificationRepository: Repository<Notification>,
 		private readonly chatService: ChatService,
 		private readonly redisService: RedisService,
+		private readonly invitationGateway: InvitationGateway,
 	) {}
 
 	async cancel({ chatId, invitationId, userId }: { chatId?: number; invitationId: number; userId: number }) {
@@ -57,13 +54,13 @@ export class InvitationService {
 		if (chatId) {
 			this.logger.log(`Invitation ${invitationId} canceled for group ${chatId}`);
 
-			this.server.to(chatId.toString()).emit('chat.update', await this.chatService.findById(chatId, true, ChatType.GROUP));
+			this.invitationGateway.server.to(chatId.toString()).emit('chat.update', await this.chatService.findById(chatId, true, ChatType.GROUP));
 		} else {
 			this.logger.log(`Invitation ${invitationId} canceled for friend`);
 		}
 
 		if (toSocketId) {
-			this.server
+			this.invitationGateway.server
 				.to(toSocketId)
 				.emit(
 					'notification.update',

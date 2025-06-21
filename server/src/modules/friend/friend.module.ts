@@ -7,10 +7,11 @@ import { NotificationModule } from '../notification/notification.module';
 import { ChatModule } from '../chat/chat.module';
 import { InvitationModule } from '../invitation/invitation.module';
 import { RedisModule } from '../redis/redis.module';
+import { FriendGateway } from './friend.gateway';
 
 @Module({
 	controllers: [FriendController],
-	providers: [FriendService],
+	providers: [FriendService, FriendGateway],
 	imports: [UserModule, NotificationModule, ChatModule, InvitationModule, RedisModule],
 	exports: [FriendService],
 })
