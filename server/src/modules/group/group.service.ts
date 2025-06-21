@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { Transactional } from 'typeorm-transactional';
+import { Server } from 'socket.io';
+import { WebSocketServer } from '@nestjs/websockets';
 
 import { Chat, ChatType } from 'src/entities/chat.entity';
 import { ChatParticipant } from 'src/entities/chat-participants.entity';
@@ -13,8 +15,6 @@ import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
 import { getChatRelations } from '../chat/chat.service';
 import { RedisService } from '../redis/redis.service';
-import { Server } from 'socket.io';
-import { WebSocketServer } from '@nestjs/websockets';
 
 @Injectable()
 export class GroupService {

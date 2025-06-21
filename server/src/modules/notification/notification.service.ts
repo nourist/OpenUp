@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { Server } from 'socket.io';
+import { WebSocketServer } from '@nestjs/websockets';
 
 import { Notification, NotificationType } from 'src/entities/notification.entity';
 import { User } from 'src/entities/user.entity';
@@ -11,7 +12,6 @@ import { Message } from 'src/entities/message.entity';
 import { UserService } from '../user/user.service';
 import { MessageReaction } from 'src/entities/message-reaction.entity';
 import { RedisService } from '../redis/redis.service';
-import { WebSocketServer } from '@nestjs/websockets';
 
 type NotificationRelation = 'user' | 'invitation';
 
